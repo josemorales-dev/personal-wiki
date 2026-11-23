@@ -1,0 +1,10 @@
+.DS_Store
+.claude/settings.local.json
+.claude/skills/synced/
+~$*
+
+# The global gitignore hides agent config; this hub tracks it.
+!AGENTS.md
+!CLAUDE.md
+!.agents/
+!.claude/
