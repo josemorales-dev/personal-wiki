@@ -10,5 +10,3 @@ Vault: `~/Jose's Vault` (quote the path; it contains a space and an apostrophe).
   target, so renaming one means updating every `[[link]]` to it.
 - Put metadata in YAML frontmatter (`tags`, `aliases`, dates as `YYYY-MM-DD`).
 - Leave `.obsidian/` to Obsidian; it holds app settings and plugin state.
-- Start new notes from `templates/notes/` in the hub when a template fits.
-- Distil knowledge worth keeping beyond the vault into the hub's `knowledge/`.

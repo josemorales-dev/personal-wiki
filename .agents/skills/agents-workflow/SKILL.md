@@ -17,4 +17,4 @@ Starting a session: read the plan, scratch, and controls formats below, write `.
 - [references/issue-tracker.md](references/issue-tracker.md): issue destinations and permissions.
 - [references/triage-labels.md](references/triage-labels.md): fallback local triage states.
 
-Use `remember` when curating project memory. Apply code and language standards relevant to the actual project.
+Apply code and language standards relevant to the actual project.

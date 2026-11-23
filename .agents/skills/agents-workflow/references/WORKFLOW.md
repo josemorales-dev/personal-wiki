@@ -10,7 +10,7 @@ Use a session when work is substantial or requires handoff: `PLAN.md` and `SCRAT
 
 ## Project state
 
-Use existing project conventions for documentation, memory, issues, and ADRs. If adopting the `.agents/` convention, project context goes in `.agents/docs/PROJECT_CONTEXT.md`, supplemental memory in `.agents/MEMORY.md` and `.agents/memories/`, and archived sessions in `.agents/archive/sessions/`. Read only relevant current memory. Use `remember` for curation; archive completed session state after retaining durable facts and removing its controls entry. An absent file does not require copying global or unrelated project state.
+Use existing project conventions for documentation, memory, issues, and ADRs. If adopting the `.agents/` convention, project context goes in `.agents/docs/PROJECT_CONTEXT.md`, supplemental memory in `.agents/MEMORY.md` and `.agents/memories/`, and archived sessions in `.agents/archive/sessions/`. Read only relevant current memory. Archive completed session state after retaining durable facts and removing its controls entry. An absent file does not require copying global or unrelated project state.
 
 ## Git policy
 

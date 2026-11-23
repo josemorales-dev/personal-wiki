@@ -1,4 +1,0 @@
-interface:
-  display_name: "Remember"
-  short_description: "Curate durable project memory"
-  default_prompt: "Use $remember to curate current project memory and archive stale artifacts."
