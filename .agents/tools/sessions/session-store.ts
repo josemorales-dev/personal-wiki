@@ -1,8 +1,10 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import type { DifitServer } from "./difit.ts";
 import { parseSession, type Parsed, type Session } from "./session.ts";
 
 const SESSION_FILE = "session.json";
+const DIFIT_FILE = "difit.json";
 
 export type ActiveSessions = {
   readonly sessions: readonly Session[];
@@ -76,6 +78,31 @@ export class SessionStore {
     }
     sessions.sort((a, b) => a.id.localeCompare(b.id));
     return { sessions, problems };
+  }
+
+  /** Records the difit server reviewing the session's draft. */
+  saveDifit(id: string, server: DifitServer): void {
+    writeFileSync(join(this.folder(id), DIFIT_FILE), `${JSON.stringify(server, null, 2)}\n`);
+  }
+
+  /** The difit server last recorded for the session, or undefined when none is recorded or the file is unreadable. */
+  loadDifit(id: string): DifitServer | undefined {
+    const file = join(this.folder(id), DIFIT_FILE);
+    if (!existsSync(file)) return undefined;
+    try {
+      const value: unknown = JSON.parse(readFileSync(file, "utf8"));
+      if (typeof value !== "object" || value === null || !("port" in value && "url" in value && "pid" in value)) {
+        return undefined;
+      }
+      const { port, url, pid } = value;
+      return typeof port === "number" && typeof url === "string" && typeof pid === "number" ? { port, url, pid } : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  forgetDifit(id: string): void {
+    rmSync(join(this.folder(id), DIFIT_FILE), { force: true });
   }
 
   /** Saves the final state and moves the folder to the archive. Returns the archive folder. */

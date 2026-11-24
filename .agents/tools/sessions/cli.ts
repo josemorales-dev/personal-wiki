@@ -42,6 +42,8 @@ export type Context = {
   readonly stderr: (text: string) => void;
   /** Starts difit in `directory` with `args`, in the background. */
   readonly startDifit: (directory: string, args: readonly string[]) => Parsed<DifitServer>;
+  /** Stops the difit server running as `pid`. */
+  readonly stopDifit: (pid: number) => Outcome;
   /** Opens `url` in Google Chrome, in front of other windows. */
   readonly openInChrome: (url: string) => Outcome;
   /** Runs a dependency install `command` in `directory`. */
@@ -149,8 +151,9 @@ Example:
 const FINISH_HELP = `Usage: sessions finish <id> [--discard-draft]
 
 Remove the worktree and branch of a session whose branch is merged into its
-base, then move the session folder to the archive. A worktree with uncommitted
-changes or an unmerged branch is left untouched.
+base, then stop the session's difit server and move the session folder to the
+archive. A worktree with uncommitted changes or an unmerged branch is left
+untouched.
 
 Options:
   --discard-draft  Remove the worktree and branch even when the draft is
@@ -173,7 +176,8 @@ const DIFIT_HELP = `Usage: sessions difit <id>
 
 Open the session's draft in difit, a diff viewer, in Google Chrome. It shows
 every committed, uncommitted, and untracked change in the worktree against the
-session base. The server keeps running in the background; print the review
+session base. The server keeps running in the background until the next
+'sessions difit' or 'sessions finish' for the session; print the review
 comments with:
 
   bunx ${DIFIT} comment get --port <port> --format json
@@ -422,14 +426,17 @@ function difit(args: readonly string[], context: Context): void {
     parseArgs({ args: [...args], allowPositionals: true, strict: true, options: {} }),
   );
   const id = expectUsage(parseSessionId(onlyPositional(positionals, "<id>")));
-  const session = expectCommand(new SessionStore(context.hubRoot).load(id), LIST_HINT);
+  const store = new SessionStore(context.hubRoot);
+  const session = expectCommand(store.load(id), LIST_HINT);
   if (!existsSync(session.worktree)) {
     throw new CommandError(`the worktree ${session.worktree} is missing`, `run 'sessions show ${id}'`);
   }
+  stopSessionDifit(store, id, context);
   const server = expectCommand(
     context.startDifit(session.worktree, [".", session.base, "--merge-base", "--include-untracked", "--background", "--no-open"]),
     `run 'bunx ${DIFIT} . ${session.base}' in ${session.worktree} to see the full error`,
   );
+  store.saveDifit(id, server);
   const url = `${server.url}/?session=${id}`;
   const opened = context.openInChrome(url);
   if (!opened.ok) {
@@ -488,6 +495,7 @@ function finish(args: readonly string[], context: Context): void {
       "merge it first, or pass --discard-draft once the approved change is built in the main checkout",
     );
   }
+  const stopped = stopSessionDifit(store, id, context);
   const remove = discard ? discardWorktree : removeWorktree;
   const cleanup = existsSync(session.worktree) ? remove(session.repo, session.worktree) : pruneWorktrees(session.repo);
   if (!cleanup.ok) {
@@ -506,6 +514,7 @@ function finish(args: readonly string[], context: Context): void {
       fields(context.color, [
         ["worktree", `removed ${session.worktree}`],
         ["branch", `deleted ${session.branch}`],
+        ...(stopped === undefined ? [] : [["difit", `stopped the server on port ${stopped.port}`] as const]),
         ["archive", archive],
       ]),
   );
@@ -530,6 +539,16 @@ function checkFormat(args: readonly string[], context: Context): void {
       problems.map((problem) => `  ${problem.file}:${problem.line}: ${problem.message}`).join("\n"),
     "see references/PLAN-FORMAT.md in agents-coding-workflow",
   );
+}
+
+/** Stops the session's recorded difit server and forgets it. Returns the server, or undefined when none was recorded. */
+function stopSessionDifit(store: SessionStore, id: string, context: Context): DifitServer | undefined {
+  const server = store.loadDifit(id);
+  if (server === undefined) return undefined;
+  const stopped = context.stopDifit(server.pid);
+  if (!stopped.ok) warn(context, `could not stop difit on port ${server.port}: ${stopped.error}`);
+  store.forgetDifit(id);
+  return server;
 }
 
 function view(session: Session, sessions: readonly Session[], store: SessionStore): SessionView {

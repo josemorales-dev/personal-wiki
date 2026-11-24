@@ -80,6 +80,12 @@ type Cli = {
   openedUrls(): readonly string[];
   /** Makes the next attempt to open Chrome fail with `error`. */
   failChrome(error: string): void;
+  /** Each difit pid the CLI stopped, in order. */
+  stoppedPids(): readonly number[];
+  /** Makes every attempt to stop difit fail with `error`. */
+  failStops(error: string): void;
+  /** Sets the server the next difit start returns. */
+  nextDifit(server: DifitServer): void;
   /** Each install the CLI ran, in order. */
   installs(): readonly Install[];
   /** Makes every install fail with `error`. */
@@ -88,7 +94,7 @@ type Cli = {
 
 type DifitCall = { readonly directory: string; readonly args: readonly string[] };
 
-const DIFIT_SERVER: DifitServer = { port: 4967, url: "http://localhost:4967" };
+const DIFIT_SERVER: DifitServer = { port: 4967, url: "http://localhost:4967", pid: 4242 };
 
 function cli(color = false): Cli {
   const hub = temporaryDirectory();
@@ -99,6 +105,8 @@ function cli(color = false): Cli {
   let difitResult: Parsed<DifitServer> = { ok: true, value: DIFIT_SERVER };
   const openedUrls: string[] = [];
   let chromeResult: Outcome = { ok: true };
+  const stoppedPids: number[] = [];
+  let stopResult: Outcome = { ok: true };
   const installs: Install[] = [];
   let installResult: Outcome = { ok: true };
   const context: Context = {
@@ -114,6 +122,10 @@ function cli(color = false): Cli {
     startDifit: (directory, args) => {
       difitCalls.push({ directory, args });
       return difitResult;
+    },
+    stopDifit: (pid) => {
+      stoppedPids.push(pid);
+      return stopResult;
     },
     openInChrome: (url) => {
       openedUrls.push(url);
@@ -142,6 +154,13 @@ function cli(color = false): Cli {
       difitResult = { ok: false, error };
     },
     openedUrls: () => openedUrls,
+    stoppedPids: () => stoppedPids,
+    failStops(error) {
+      stopResult = { ok: false, error };
+    },
+    nextDifit(server) {
+      difitResult = { ok: true, value: server };
+    },
     failChrome(error) {
       chromeResult = { ok: false, error };
     },
@@ -603,6 +622,26 @@ describe("difit", () => {
     expect(c.stdout()).toContain("http://localhost:4967");
   });
 
+  test("stops the session's previous server before starting a new one", () => {
+    const c = cli();
+    start(c, projectRepository(), "add-login");
+    expect(c.sessions("difit", "add-login")).toBe(0);
+    expect(c.stoppedPids()).toEqual([]);
+    c.nextDifit({ port: 4968, url: "http://localhost:4968", pid: 5353 });
+    expect(c.sessions("difit", "add-login")).toBe(0);
+    expect(c.stoppedPids()).toEqual([4242]);
+  });
+
+  test("leaves other sessions' servers running", () => {
+    const repo = projectRepository();
+    const c = cli();
+    start(c, repo, "add-login");
+    start(c, repo, "fix-auth");
+    expect(c.sessions("difit", "add-login")).toBe(0);
+    expect(c.sessions("difit", "fix-auth")).toBe(0);
+    expect(c.stoppedPids()).toEqual([]);
+  });
+
   test("fails with difit's error when the server does not start", () => {
     const c = cli();
     start(c, projectRepository(), "add-login");
@@ -758,6 +797,37 @@ describe("finish", () => {
     expect(existsSync(worktree)).toBe(false);
     expect(git(repo, "branch", "--list", "add-login")).toBe("");
     expect(existsSync(join(c.hub, ".agents", "archive", "sessions", "add-login"))).toBe(true);
+  });
+
+  test("stops the session's difit server and reports it", () => {
+    const repo = projectRepository();
+    const c = cli();
+    start(c, repo, "add-login");
+    expect(c.sessions("difit", "add-login")).toBe(0);
+    expect(c.sessions("finish", "add-login", "--discard-draft")).toBe(0);
+    expect(c.stoppedPids()).toEqual([4242]);
+    expect(c.stdout()).toContain("stopped the server on port 4967");
+    expect(existsSync(join(c.hub, ".agents", "archive", "sessions", "add-login", "difit.json"))).toBe(false);
+  });
+
+  test("keeps the review running when finish is refused", () => {
+    const repo = projectRepository();
+    const c = cli();
+    start(c, repo, "add-login");
+    commitIn(worktreeOf(repo, "add-login"), "login.ts");
+    expect(c.sessions("difit", "add-login")).toBe(0);
+    expect(c.sessions("finish", "add-login")).toBe(1);
+    expect(c.stoppedPids()).toEqual([]);
+  });
+
+  test("warns when the server does not stop and still finishes", () => {
+    const repo = projectRepository();
+    const c = cli();
+    start(c, repo, "add-login");
+    expect(c.sessions("difit", "add-login")).toBe(0);
+    c.failStops("operation not permitted");
+    expect(c.sessions("finish", "add-login", "--discard-draft")).toBe(0);
+    expect(c.stderr()).toContain("could not stop difit on port 4967: operation not permitted");
   });
 
   test("keeps an archived id reserved", () => {
