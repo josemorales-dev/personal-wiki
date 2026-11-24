@@ -248,7 +248,7 @@ function start(args: readonly string[], context: Context): void {
     carriedRows = [["carried", `${carried.length} uncommitted file(s) from ${base}`]];
     carriedNote =
       `\nCarried, uncommitted in the worktree:\n${carried.map((path) => `  ${path}\n`).join("")}` +
-      `Stage only the session's own changes. Before merging, commit or stash the copy on ${base} of any file the session also changed.\n`;
+      "difit shows them with the draft.\n";
   }
   context.stdout(
     `Started ${paint(context.color, "bold", id)}\n` +
@@ -259,7 +259,7 @@ function start(args: readonly string[], context: Context): void {
         ...carriedRows,
       ]) +
       carriedNote +
-      "\nWrite PLAN.md in the folder and make every change in the worktree.\n",
+      "\nWrite PLAN.md in the folder and draft the change in the worktree.\n",
   );
 }
 

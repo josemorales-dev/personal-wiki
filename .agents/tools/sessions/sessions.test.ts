@@ -258,13 +258,13 @@ describe("start", () => {
     expect(git(repo, "status", "--porcelain")).toContain("README.md");
   });
 
-  test("lists the carried files and how to merge around them", () => {
+  test("lists the carried files and says difit shows them", () => {
     const repo = projectRepository();
     writeFileSync(join(repo, "README.md"), "app, edited\n");
     const c = cli();
     start(c, repo, "add-login");
     expect(c.stdout()).toContain("README.md");
-    expect(c.stdout()).toContain("Stage only the session's own changes");
+    expect(c.stdout()).toContain("difit shows them with the draft");
   });
 
   test("carries nothing when --base names another commit", () => {
