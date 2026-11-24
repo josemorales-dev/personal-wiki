@@ -66,12 +66,12 @@ Start it from `Templates/Meeting.md`. Prepare the agenda before the meeting, tak
 ```
 
 - In `Notes`, mark proposals as proposals. `Decisions` holds only what was approved.
-- Action items name an owner and a deadline when known. They are the historical record; Jose's items also go to `DSA/Tasks.md`.
+- Action items name an owner and a deadline when known. They are the historical record; Jose's items also go to the section's `Tasks.md`.
 - Link the projects and `Knowledge Base` headings the meeting touched.
 
 ## Project note: `DSA/Projects/Rent Strike Teach-in.md`
 
-Start it from `Templates/Project.md`, for DSA and Personal projects alike.
+Start it from `Templates/Project.md`, in every section.
 
 ```md
 ## Goal
@@ -100,9 +100,17 @@ Active — venue confirmed, outreach under way.
 - Update the note only when something meaningful changed.
 - A finished project keeps its note, with `Done`.
 
-## `DSA/Knowledge Base.md`
+## `Knowledge Base.md`, in `DSA/` and `DSA Tech/`
 
-One `##` heading per topic (`Roles`, `Procedures`, `Links`), added as the need appears.
+One `##` heading per topic (`Roles`, `Procedures`, `Links`; for DSA Tech, `Repositories`, `Access`, `Hosting`), added as the need appears.
+
+Every outside fact carries a footnote whose definition ends in the URL. The definition names the author, title, and date. It also says how far to trust the source: official, press, or written by a caucus.
+
+```md
+- The CLC has 108 seats from 2026.[^announce]
+
+[^announce]: NYC-DSA, "2026 NYC-DSA Chapter Elections," 2026-11-23. Official. https://socialists.nyc/...
+```
 
 ## Personal note: `Personal/Notes/The Power Broker.md`
 

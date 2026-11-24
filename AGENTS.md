@@ -11,9 +11,10 @@ work in the style of Kent Beck.
   when no other location is named.
 - Obsidian vault `~/Jose's Vault` — all personal notes and durable knowledge, a
   separate folder outside this repository.
-- Code repositories — the path the user names, usually `~/Projects/<name>`.
-  That repository's own `AGENTS.md` / `CLAUDE.md` governs work inside it, and
-  its domain knowledge (glossary, ADRs) lives in that repository.
+- Code repositories — usually `~/Projects/<name>`. To resolve a project the
+  user names, read [docs/agents/places.md](docs/agents/places.md). That
+  repository's own `AGENTS.md` / `CLAUDE.md` governs work inside it, and its
+  domain knowledge (glossary, ADRs) lives in that repository.
 
 ## Skills by kind of work
 
