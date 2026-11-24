@@ -24,21 +24,31 @@ Take the route from **Planning** in the hub `AGENTS.md`. Each step ends on its c
 9. **Ship.** Commit or open a PR only when authorized (see Git). Report the result, the spot-check list, remaining limitations, and changed paths.
 10. **Learn.** When a mistake recurred, or review or a check let one through, suggest the user run `/retro`; a mechanical mistake becomes a lint rule, test, or hook. Done when the suggestion is made, or no mistake recurred.
 
+## Writing
+
+Every artifact the user reads follows the rules in [unslop](../unslop/SKILL.md): `PLAN.md`, the scratch files, `RESEARCH.md`, the final report, commit messages, PR bodies, and issues. Read the rules before writing the first artifact of a task, and check each artifact against them before presenting it. Verbatim content stays exact: proposed code and diffs, command output, and quotes.
+
 ## Authorization and scope
 
 Carry out changes the user has authorized. An audit or review alone authorizes inspection and findings; an explicit request to fix or implement authorizes the scoped edits. Ask only for missing information, genuinely consequential approval, or a specific applicable project requirement.
 
-Use a session for every change except a small, clear one: `PLAN.md`, `SCRATCH-TESTS.md`, and `SCRATCH-CODE.md` under the selected project's `.agents/sessions/<session-id>/`, tracked in `.agents/CONTROLS.md`. Read the formats before writing them:
+Use a session for every change except a small, clear one. Sessions for every project live in the hub, so one list shows every agent's work on this machine. Manage them with `sessions`, which means `bun ~/Projects/personal-wiki/.agents/tools/sessions/main.ts`; `sessions help` lists its commands.
+
+- Check: run `sessions list` before starting. When another session's scope overlaps the new work, tell the user before building.
+- Start: run `sessions start <id> --repo <project> --tool <claude|codex>` before writing `PLAN.md`. It creates the worktree `<project>.worktrees/<id>` on branch `<id>` and the session folder `.agents/sessions/<id>/` in the hub. Write `PLAN.md`, the scratch files, and `RESEARCH.md` in the folder, and make every change and commit in the worktree.
+- Track: record each step with `sessions update <id> --status <status>`, and record the approved plan's `Scope` paths with `--scope`.
+- Finish: after the branch is merged, run `sessions finish <id>`. It removes the worktree and branch and archives the folder.
+
+Read the formats before writing them:
 
 - [references/PLAN-FORMAT.md](references/PLAN-FORMAT.md): session plans and handoff.
 - [references/SCRATCH-FORMAT.md](references/SCRATCH-FORMAT.md): the exact test and code changes, approved together with the plan.
-- [references/CONTROLS-FORMAT.md](references/CONTROLS-FORMAT.md): active session tracking.
 
-Resuming a session: its `PLAN.md`, scratch files, and Git history are the authoritative trail. Reconstruct state from them, continue from the handoff's `Next`, and re-run only the checks the remaining work touches.
+Resuming a session: `sessions show <id>` gives its worktree and folder. Its `PLAN.md`, scratch files, and Git history are the authoritative trail. Reconstruct state from them, continue from the handoff's `Next`, and re-run only the checks the remaining work touches.
 
 ## Project state
 
-Use existing project conventions for documentation, memory, issues, and ADRs. If adopting the `.agents/` convention, project context goes in `.agents/docs/PROJECT_CONTEXT.md`, supplemental memory in `.agents/MEMORY.md` and `.agents/memories/`, and archived sessions in `.agents/archive/sessions/`. Read only relevant current memory. Archive completed session state after retaining durable facts and removing its controls entry. An absent file does not require copying global or unrelated project state.
+Use existing project conventions for documentation, memory, issues, and ADRs. If adopting the `.agents/` convention, project context goes in `.agents/docs/PROJECT_CONTEXT.md` and supplemental memory in `.agents/MEMORY.md` and `.agents/memories/`. Read only relevant current memory. Before `sessions finish`, move durable facts from the session into project memory or docs. An absent file does not require copying global or unrelated project state.
 
 For issue or PRD work, read [references/issue-tracker.md](references/issue-tracker.md).
 

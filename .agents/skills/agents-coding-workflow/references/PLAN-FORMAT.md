@@ -1,4 +1,4 @@
-# PLAN.md Format
+# PLAN.md format
 
 Write plans in terse, clear language. Include only information needed to execute, validate, or resume the work.
 
@@ -9,34 +9,39 @@ Write plans in terse, clear language. Include only information needed to execute
 
 ## Task N: <verb phrase>
 
-**Status:** not started | in progress | done | blocked
-**Goal:** <one sentence describing the required result>
-**Notes:**
+- Status: not started | in progress | done | blocked
+- Goal: <one sentence describing the required result>
+
+Notes:
 
 - <non-obvious constraint, decision, or dependency>
 
-**Scope:**
+Scope:
 
-- `<path>` — <intended change>
+| Path     | Change            |
+| -------- | ----------------- |
+| `<path>` | <intended change> |
 
-**Seams:**
+Seams:
 
-- `<public interface>` — <behaviour the tests observe there>
+| Interface            | Behaviour the tests observe |
+| -------------------- | --------------------------- |
+| `<public interface>` | <behaviour>                 |
 
-**Steps:**
+Steps:
 
 1. <imperative action>
 
-**Checks:**
+Checks:
 
-- `<command>` — <expected result>
+- `<command>` shows <expected result>.
 
 ## Handoff
 
-- **Done:** <completed work, with the checks that proved it>
-- **State:** <branch, last commit, whether the tree is clean or broken>
-- **Next:** <first action on resume>
-- **Blocker:** <reason work cannot continue>
+- Done: <completed work, with the checks that proved it>
+- State: <branch, last commit, whether the tree is clean or broken>
+- Next: <first action on resume>
+- Blocker: <reason work cannot continue>
 ```
 
 ## Rules

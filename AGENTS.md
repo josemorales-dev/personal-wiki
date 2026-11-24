@@ -49,6 +49,10 @@ with `/implement` or `/implement-spec`.
 
 Slash commands are user-typed: name the command and ask the user to run it.
 
+Sessions for every project live in this hub, each with a Git worktree beside its
+project repository. `agents-coding-workflow` manages them with the `sessions`
+tool.
+
 ## Skill locations
 
 Skills live only in this repository: canonical copies in `.agents/skills/`,

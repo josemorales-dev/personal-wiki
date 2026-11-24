@@ -11,3 +11,7 @@
 
 # Codex project config (rules) lives in the repo; overrides the global ignore
 !.codex/
+
+# Live session state belongs to this machine; archived sessions are tracked.
+.agents/sessions/
+.agents/tools/sessions/node_modules/

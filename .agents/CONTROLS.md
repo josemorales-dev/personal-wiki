@@ -1,2 +1,0 @@
-| Session | Plan | Tests | Code |
-| ------- | ---- | ----- | ---- |
