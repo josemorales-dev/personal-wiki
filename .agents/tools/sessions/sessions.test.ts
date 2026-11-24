@@ -394,6 +394,34 @@ describe("update", () => {
     expect(c.stderr()).toContain("invalid scope path '../other'");
   });
 
+  test("refuses to build a scope that another session is building in the same repository", () => {
+    const repo = projectRepository();
+    const c = cli();
+    start(c, repo, "add-login");
+    start(c, repo, "fix-auth");
+    expect(c.sessions("update", "add-login", "--status", "building", "--scope", "src/auth")).toBe(0);
+    expect(c.sessions("update", "fix-auth", "--status", "building", "--scope", "src/auth/token.ts")).toBe(1);
+    expect(c.stderr()).toContain("add-login is already building an overlapping scope in app");
+    expect(c.sessions("show", "fix-auth", "--json")).toBe(0);
+    expect(c.json()).toMatchObject({ status: "aligning", scope: [] });
+  });
+
+  test("refuses to build without a scope", () => {
+    const c = cli();
+    start(c, projectRepository(), "add-login");
+    expect(c.sessions("update", "add-login", "--status", "building")).toBe(1);
+    expect(c.stderr()).toContain("a session needs a scope before it builds");
+  });
+
+  test("builds alongside a session whose scope does not overlap", () => {
+    const repo = projectRepository();
+    const c = cli();
+    start(c, repo, "add-login");
+    start(c, repo, "fix-docs");
+    expect(c.sessions("update", "add-login", "--status", "building", "--scope", "src/auth")).toBe(0);
+    expect(c.sessions("update", "fix-docs", "--status", "building", "--scope", "docs")).toBe(0);
+  });
+
   test("requires a status or a scope", () => {
     const repo = projectRepository();
     const c = cli();

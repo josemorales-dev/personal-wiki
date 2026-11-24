@@ -122,7 +122,8 @@ Options:
 const UPDATE_HELP = `Usage: sessions update <id> [--status <status>] [--scope <path>]... [--json]
 
 Record a session's progress. --scope replaces the whole scope; repeat it once
-per path, relative to the repository root.
+per path, relative to the repository root. Status building fails while another
+session in the same repository is building an overlapping scope.
 
 Statuses:
   ${STATUSES.filter((status) => status !== "done").join(", ")}
@@ -358,9 +359,23 @@ function update(args: readonly string[], context: Context): void {
     scope: scope ?? session.scope,
     updated: context.now().toISOString(),
   };
+  const active = store.loadActive().sessions;
+  if (updated.status === "building") {
+    if (updated.scope.length === 0) {
+      throw new CommandError("a session needs a scope before it builds", "pass --scope <path> once per path it changes");
+    }
+    const building = active.filter((other) => other.status === "building");
+    const clashes = overlappingSessionIds(updated, building);
+    if (clashes.length > 0) {
+      throw new CommandError(
+        `${clashes.join(", ")} is already building an overlapping scope in ${basename(session.repo)}`,
+        "wait until it moves on from building, or narrow this session's --scope",
+      );
+    }
+  }
   store.save(updated);
   if (values.json === true) {
-    context.stdout(json(view(updated, store.loadActive().sessions, store)));
+    context.stdout(json(view(updated, active, store)));
     return;
   }
   const changes = [
