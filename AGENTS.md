@@ -10,21 +10,22 @@ work in the style of Kent Beck.
 - This repository — skills and agent configuration. It is the default target
   when no other location is named.
 - Obsidian vault `~/Jose's Vault` — all personal notes and durable knowledge, a
-  separate folder outside this repository. Read
-  [.agents/docs/OBSIDIAN.md](.agents/docs/OBSIDIAN.md) before creating or
-  editing notes there.
+  separate folder outside this repository.
 - Code repositories — the path the user names, usually `~/Projects/<name>`.
   That repository's own `AGENTS.md` / `CLAUDE.md` governs work inside it, and
   its domain knowledge (glossary, ADRs) lives in that repository.
 
 ## Skills by kind of work
 
-- Repository changes, issue or PRD work: `agents-workflow`. Its references are
-  the source of truth for workflow and project operations.
+- Writing software (code changes, Git actions, issue or PRD work):
+  `agents-coding-workflow`. Its references are the source of truth for
+  workflow and project operations.
 - Code changes or reviews: `agents-code-standards`; add
   `agents-language-standards` for TypeScript, JavaScript, declarations,
   compiler configuration, and typed lint rules; add `agents-project-guides`
   when the target project provides it.
+- Notes in the Obsidian vault, personal or NYC DSA (capture, tasks, meetings,
+  projects, weekly review): `agents-obsidian-workflow`.
 - Spreadsheets, Word, PDF, slides: the `xlsx`, `docx`, `pdf`, `pptx` skills.
 - Writing a skill or editing `AGENTS.md` / `CLAUDE.md`: `writing-for-agents`.
 

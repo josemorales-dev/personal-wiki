@@ -1,7 +1,9 @@
 # SCRATCH.md Format
 
-`SCRATCH.md` is the exact content proposal presented for approval. Keep it
-small enough to review while making every intended content change explicit.
+`SCRATCH.md` is the exact content proposal. It is presented together with
+`PLAN.md` as one approval, before any change is applied: the plan says what
+and why, the scratch shows how. Keep it small enough to review while making
+every intended content change explicit.
 
 ## Structure
 
@@ -64,5 +66,9 @@ Complete proposed contents of the new file.
   line range. Do not reproduce the deleted file.
 - Keep validation output, implementation notes, and ordinary session cleanup
   out of `SCRATCH.md`; those belong in the plan or final report.
+- In test-first work, list the tests first, then the code that turns them
+  green.
 - If implementation must differ materially from the approved proposal, update
-  `SCRATCH.md` and request approval again before applying the difference.
+  `PLAN.md` and `SCRATCH.md` and request approval again before applying the
+  difference. Refactors inside the approved scope that keep the checks green are
+  not material.

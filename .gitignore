@@ -8,3 +8,6 @@
 !CLAUDE.md
 !.agents/
 !.claude/
+
+# Codex project config (rules) lives in the repo; overrides the global ignore
+!.codex/
