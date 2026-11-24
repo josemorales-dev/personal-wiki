@@ -2,6 +2,8 @@
 
 Mandatory decision rules for TypeScript code, public types, compiler configuration, typed linting, and type tests. Apply toolchain sections only when the task changes that toolchain or creates a new configuration; do not turn an unrelated edit into a migration.
 
+For worked Do/Don't code, read `references/TYPESCRIPT_PATTERNS.md` when a type-design, boundary, narrowing, or brand rule's code shape is unclear, or when removing an `as` or `!` from existing code.
+
 ## Runtime truth
 
 - Treat TypeScript as static analysis over JavaScript, not a runtime type system. Types are erased, soundness is not a design goal, and annotations do not make external values safe.
@@ -13,24 +15,30 @@ Mandatory decision rules for TypeScript code, public types, compiler configurati
 
 - Prefer inference for obvious local values. Add annotations where they define a meaningful contract, especially exported APIs, callbacks with contextual types, recursive values, and intentional widening.
 - Prefer annotations or `satisfies` to assertions when checking object shape. They preserve compiler checking instead of claiming the result.
-- Model alternatives as discriminated unions with literal discriminants. Narrow from runtime evidence and handle every variant exhaustively.
+- Model alternatives as discriminated unions with literal discriminants, using the discriminant name the codebase already uses (`kind`, `type`, or `tag`). Narrow from runtime evidence and handle every variant exhaustively: end a `switch` over a discriminant with `default: { const _exhaustive: never = value; }` so a new variant fails to compile.
 - Design types so valid values represent valid states. Replace boolean clusters, optional-property bags, and sentinel strings or numbers with explicit variants when states have different required data.
+- Model constructively: shape the type so the illegal value cannot be built, such as `[T, ...T[]]` for a non-empty list or `start` plus `duration` instead of two independent dates. Keep the simplest total type (`T[]`) while every operation on it stays total; where the loose type forces `!`, an assertion, or a "should never happen" throw, strengthen the input or weaken the result to `T | undefined`.
+- Derive types from their source of truth with `typeof`, `ReturnType`, `Parameters`, `Awaited`, `Pick`, `Omit`, or a schema's inferred type before declaring a parallel interface.
+- Pass an object instead of several positional parameters when arguments share a type or their order is not obvious, except on hot paths such as parsers or per-frame rendering.
 - Distinguish a missing property from a property whose value is `undefined`. Make optional properties intentional and sparse.
 - Use `readonly` inputs and properties when mutation is not part of the contract, particularly for shared collections and exported APIs.
 - Use primitive `string`, `number`, `boolean`, `symbol`, and `bigint` types, never their boxed object types.
 
 ## Boundaries: parse, don't validate
 
-- Accept untrusted input as `unknown` at HTTP, environment, config, storage, message, and third-party API boundaries.
+- Accept untrusted input as `unknown` at HTTP and RPC, `JSON.parse`, environment, config, file, database, storage, `postMessage` and IPC, and third-party API boundaries.
 - Parse once at the boundary into the trusted type consumed downstream. Return the parsed value; do not run a check that leaves the original broad type unchanged.
 - When Zod is already in use, make the schema the runtime source of truth and infer the static type from it. Use `parse`/`parseAsync` when failure should throw and `safeParse` when failure is an expected branch.
+- Parse into a named domain type. `Record<string, unknown>` and similar loose shapes stop at that parse and never travel into domain code.
+- Version persisted JSON and treat a failed parse as an expected branch. Parse wire formats tolerantly of unknown fields so forward-compatible additions do not break older readers.
 - Keep schemas and transformations at the boundary. Domain code must not repeatedly defend against raw input that should already have been parsed.
 - A TypeScript type, type guard, assertion function, or brand is not runtime proof unless its implementation actually inspects the value.
+- Before hand-writing a property-by-property type guard, use the repository's schema library and infer the type from the schema; one guard does not justify a new schema dependency. When the type is declared first, annotate the schema with it (`z.ZodType<User>`) so the compiler rejects a schema that proves less. A hand-written guard must verify every property its predicate claims, is named `isX` or `hasX`, and is the only way a brand is minted. A lying guard is worse than `as`: the bug hides behind a name that says it is safe.
 
 ## Unsafe escape hatches
 
 - Do not introduce `any` in production code. Use `unknown`, a precise generic constraint, or a small boundary adapter. If a third-party declaration leaks `any`, contain it immediately and convert it to `unknown` or a parsed type.
-- Do not narrow with `as` or postfix `!`. Prefer control-flow narrowing, a runtime parser, a checked type guard, or code structure that makes nullability visible.
+- Do not narrow with `as` or postfix `!`. Narrow with the strongest evidence available, in this order: discriminant `switch`, `in`, `typeof` or `instanceof`, a verifying type guard. Use a runtime parser or code structure that makes nullability visible when none applies.
 - Treat unchecked object and array lookup, inaccurate declaration files, mutable array variance, and refinements across unknown callbacks as possible unsoundness. Preserve evidence locally or re-check after mutation and opaque calls.
 - Suppress a compiler error only when the underlying types cannot yet be corrected. Use the narrowest `@ts-expect-error -- reason`, keep it adjacent to the expected error, and prefer a type test. Do not add `@ts-ignore` or `@ts-nocheck`.
 - Remove assertions and suppressions once they become unnecessary. Never double-assert through `unknown` merely to silence the compiler.
@@ -40,7 +48,7 @@ Mandatory decision rules for TypeScript code, public types, compiler configurati
 - A type parameter must express a relationship between at least two positions. If it appears only once, replace it with the concrete constraint or `unknown`.
 - Prefer inference over explicit type arguments. Do not expose caller-selected return types such as `parse<T>(input): T` when the implementation cannot prove `T`; accept a parser/schema or return `unknown` instead.
 - Keep generic constraints at the minimum capability the implementation needs. Avoid conditional-type machinery when overloads, unions, or a concrete type are clearer.
-- Use branded types only when structurally identical primitives have an important domain distinction that TypeScript must preserve. Construct them through a parsing boundary; never cast raw values directly to a brand.
+- Use branded types only when structurally identical primitives have an important domain distinction that TypeScript must preserve. Construct them through a parsing boundary; never cast raw values directly to a brand. Match the codebase's existing brand shape, or use `string & { readonly __brand: "X" }` when none exists.
 - Remember that brands are compile-time conventions, not runtime validation, and operations on branded numbers may discard the intended invariant.
 
 ## Errors and promises
@@ -86,7 +94,8 @@ Mandatory decision rules for TypeScript code, public types, compiler configurati
 
 - [ ] External values enter as `unknown` and become trusted only through parsing.
 - [ ] No new `any`, unsafe narrowing assertion, non-null assertion, or broad suppression.
-- [ ] Types make invalid states difficult to represent and unions are exhaustive.
+- [ ] Types make invalid states impossible to construct, unions are exhaustive, and derived types come from their source.
+- [ ] Every hand-written type guard verifies what it claims.
 - [ ] Each generic relates types the implementation can actually guarantee.
 - [ ] Every Promise and expected failure has an explicit owner.
 - [ ] Runtime, module, target, and declaration assumptions match the toolchain.
@@ -120,3 +129,4 @@ Mandatory decision rules for TypeScript code, public types, compiler configurati
 - [Parse, don't validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/) and [Alexis King's writing](https://lexi-lambda.github.io/)
 - [Zod basics](https://zod.dev/basics)
 - [tsd](https://github.com/tsdjs/tsd)
+- [Cursor `typescript-best-practices` skill](https://github.com/cursor/plugins/blob/main/pstack/skills/typescript-best-practices/SKILL.md)
