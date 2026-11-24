@@ -1,0 +1,20 @@
+{
+  "id": "sessions-tooling",
+  "tool": "claude",
+  "repo": "/Users/jose/Projects/personal-wiki",
+  "worktree": "/Users/jose/Projects/personal-wiki.worktrees/sessions-tooling",
+  "branch": "sessions-tooling",
+  "base": "main",
+  "status": "done",
+  "scope": [
+    ".agents/tools/sessions/worktree.ts",
+    ".agents/tools/sessions/format-check.ts",
+    ".agents/tools/sessions/format-check.test.ts",
+    ".agents/tools/sessions/cli.ts",
+    ".agents/tools/sessions/sessions.test.ts",
+    ".agents/tools/sessions/package.json",
+    ".agents/skills/agents-coding-workflow/SKILL.md"
+  ],
+  "created": "2026-11-24T17:35:20.253Z",
+  "updated": "2026-11-24T18:04:44.542Z"
+}
