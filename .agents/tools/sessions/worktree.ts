@@ -69,6 +69,12 @@ export function carryUncommitted(repo: string, worktree: string): Parsed<readonl
   return { ok: true, value: [...new Set([...changedPaths, ...untrackedPaths])].sort() };
 }
 
+/** The files Git tracks in `directory`, relative to its root. */
+export function trackedFiles(directory: string): Parsed<readonly string[]> {
+  const files = git(directory, ["ls-files", "-z"]);
+  return files.ok ? { ok: true, value: nulSeparated(files.output) } : { ok: false, error: files.error };
+}
+
 /** One draft path applied to the main checkout. */
 export type Landing = { readonly action: "copied" | "deleted"; readonly path: string };
 

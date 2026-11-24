@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { run, type Context } from "./cli.ts";
 import type { DifitServer } from "./difit.ts";
+import type { Install } from "./install.ts";
 import type { Outcome, Parsed } from "./session.ts";
 
 const START = new Date("2026-11-24T12:00:00.000Z");
@@ -79,6 +80,10 @@ type Cli = {
   openedUrls(): readonly string[];
   /** Makes the next attempt to open Chrome fail with `error`. */
   failChrome(error: string): void;
+  /** Each install the CLI ran, in order. */
+  installs(): readonly Install[];
+  /** Makes every install fail with `error`. */
+  failInstalls(error: string): void;
 };
 
 type DifitCall = { readonly directory: string; readonly args: readonly string[] };
@@ -94,6 +99,8 @@ function cli(color = false): Cli {
   let difitResult: Parsed<DifitServer> = { ok: true, value: DIFIT_SERVER };
   const openedUrls: string[] = [];
   let chromeResult: Outcome = { ok: true };
+  const installs: Install[] = [];
+  let installResult: Outcome = { ok: true };
   const context: Context = {
     hubRoot: hub,
     color,
@@ -111,6 +118,10 @@ function cli(color = false): Cli {
     openInChrome: (url) => {
       openedUrls.push(url);
       return chromeResult;
+    },
+    runInstall: (directory, command) => {
+      installs.push({ directory, command });
+      return installResult;
     },
   };
   return {
@@ -133,6 +144,10 @@ function cli(color = false): Cli {
     openedUrls: () => openedUrls,
     failChrome(error) {
       chromeResult = { ok: false, error };
+    },
+    installs: () => installs,
+    failInstalls(error) {
+      installResult = { ok: false, error };
     },
   };
 }
@@ -316,6 +331,41 @@ describe("start", () => {
     const c = cli();
     expect(c.sessions("start", "add-login", "--repo", repo, "--tool", "claude", "--json")).toBe(0);
     expect(c.json()).toMatchObject({ carried: ["notes.md"] });
+  });
+
+  test("runs the frozen install for each tracked lockfile in the worktree", () => {
+    const repo = projectRepository();
+    mkdirSync(join(repo, "tools"));
+    writeFileSync(join(repo, "tools", "bun.lock"), "{}\n");
+    writeFileSync(join(repo, "package-lock.json"), "{}\n");
+    git(repo, "add", ".");
+    git(repo, "commit", "--quiet", "--message", "Add lockfiles");
+    const c = cli();
+    expect(c.sessions("start", "add-login", "--repo", repo, "--tool", "claude", "--json")).toBe(0);
+    const worktree = worktreeOf(repo, "add-login");
+    expect(c.installs()).toEqual([
+      { directory: join(worktree, "."), command: ["npm", "ci"] },
+      { directory: join(worktree, "tools"), command: ["bun", "install", "--frozen-lockfile"] },
+    ]);
+    expect(c.json()).toMatchObject({ installed: [".", "tools"] });
+  });
+
+  test("warns about a failed install and still starts the session", () => {
+    const repo = projectRepository();
+    writeFileSync(join(repo, "bun.lock"), "{}\n");
+    git(repo, "add", "bun.lock");
+    git(repo, "commit", "--quiet", "--message", "Add lockfile");
+    const c = cli();
+    c.failInstalls("lockfile had changes");
+    start(c, repo, "add-login");
+    expect(c.stderr()).toContain("'bun install --frozen-lockfile' failed in .: lockfile had changes");
+    expect(existsSync(worktreeOf(repo, "add-login"))).toBe(true);
+  });
+
+  test("runs no install without a lockfile", () => {
+    const c = cli();
+    start(c, projectRepository(), "add-login");
+    expect(c.installs()).toEqual([]);
   });
 
   test("carries when --base names the current commit", () => {

@@ -3,6 +3,7 @@ import { basename, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { DIFIT, type DifitServer } from "./difit.ts";
 import { checkPlanFormat } from "./format-check.ts";
+import { installCommands } from "./install.ts";
 import { cell, fields, paint, relativeAge, STATUS_STYLE, table } from "./report.ts";
 import {
   overlappingSessionIds,
@@ -30,6 +31,7 @@ import {
   removeWorktree,
   sameCommit,
   siblingWorktreePath,
+  trackedFiles,
 } from "./worktree.ts";
 
 export type Context = {
@@ -42,6 +44,8 @@ export type Context = {
   readonly startDifit: (directory: string, args: readonly string[]) => Parsed<DifitServer>;
   /** Opens `url` in Google Chrome, in front of other windows. */
   readonly openInChrome: (url: string) => Outcome;
+  /** Runs a dependency install `command` in `directory`. */
+  readonly runInstall: (directory: string, command: readonly string[]) => Outcome;
 };
 
 const EXIT_OK = 0;
@@ -83,6 +87,10 @@ and state. The worktree holds the session's draft.
 When the session starts from the current branch, the repository's uncommitted
 changes and untracked files are copied into the new worktree, uncommitted.
 Ignored files are not copied.
+
+For each lockfile Git tracks, start runs the frozen install in its folder:
+bun.lock and bun.lockb, package-lock.json, pnpm-lock.yaml, and yarn.lock. A
+failed install prints a warning and the session still starts.
 
 Options:
   --repo <path>   Project repository, or any folder inside it
@@ -251,9 +259,17 @@ function start(args: readonly string[], context: Context): void {
         `the worktree exists without the uncommitted changes; copy them by hand or run 'sessions show ${id}'`,
       )
     : [];
+  const installs = installCommands(expectCommand(trackedFiles(session.worktree)));
+  for (const install of installs) {
+    const installed = context.runInstall(join(session.worktree, install.directory), install.command);
+    if (!installed.ok) {
+      warn(context, `'${install.command.join(" ")}' failed in ${install.directory}: ${installed.error}`);
+    }
+  }
+  const installedDirectories = installs.map((install) => install.directory);
   const created = view(session, [session], store);
   if (values.json === true) {
-    context.stdout(json({ ...created, carried }));
+    context.stdout(json({ ...created, carried, installed: installedDirectories }));
     return;
   }
   let carriedRows: readonly (readonly [string, string])[] = [];
@@ -264,6 +280,8 @@ function start(args: readonly string[], context: Context): void {
       `\nCarried, uncommitted in the worktree:\n${carried.map((path) => `  ${path}\n`).join("")}` +
       "difit shows them with the draft.\n";
   }
+  const installedRows: readonly (readonly [string, string])[] =
+    installedDirectories.length === 0 ? [] : [["installed", installedDirectories.join(", ")]];
   context.stdout(
     `Started ${paint(context.color, "bold", id)}\n` +
       fields(context.color, [
@@ -271,6 +289,7 @@ function start(args: readonly string[], context: Context): void {
         ["branch", `${created.branch} from ${created.base}`],
         ["folder", created.folder],
         ...carriedRows,
+        ...installedRows,
       ]) +
       carriedNote +
       "\nWrite PLAN.md in the folder and draft the change in the worktree.\n",
