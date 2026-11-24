@@ -1,0 +1,15 @@
+{
+  "id": "retro-followups",
+  "tool": "claude",
+  "repo": "/Users/jose/Projects/personal-wiki",
+  "worktree": "/Users/jose/Projects/personal-wiki.worktrees/retro-followups",
+  "branch": "retro-followups",
+  "base": "main",
+  "status": "done",
+  "scope": [
+    ".agents/tools/sessions",
+    ".agents/skills/agents-coding-workflow"
+  ],
+  "created": "2026-11-24T18:29:25.912Z",
+  "updated": "2026-11-24T18:41:42.143Z"
+}
