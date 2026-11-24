@@ -1,0 +1,16 @@
+{
+  "id": "difit-review",
+  "tool": "claude",
+  "repo": "/Users/jose/Projects/personal-wiki",
+  "worktree": "/Users/jose/Projects/personal-wiki.worktrees/difit-review",
+  "branch": "difit-review",
+  "base": "main",
+  "status": "done",
+  "scope": [
+    ".agents/tools/sessions",
+    ".agents/skills/agents-coding-workflow",
+    "AGENTS.md"
+  ],
+  "created": "2026-11-24T18:17:27.045Z",
+  "updated": "2026-11-24T18:25:12.108Z"
+}
