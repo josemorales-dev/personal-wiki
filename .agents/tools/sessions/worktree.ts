@@ -1,4 +1,4 @@
-import { cpSync, mkdirSync } from "node:fs";
+import { cpSync, lstatSync, mkdirSync, rmSync, type Stats } from "node:fs";
 import { basename, dirname, join } from "node:path";
 import type { Outcome, Parsed } from "./session.ts";
 
@@ -67,6 +67,49 @@ export function carryUncommitted(repo: string, worktree: string): Parsed<readonl
     return { ok: false, error: `could not copy untracked files: ${error instanceof Error ? error.message : String(error)}` };
   }
   return { ok: true, value: [...new Set([...changedPaths, ...untrackedPaths])].sort() };
+}
+
+/** One draft path applied to the main checkout. */
+export type Landing = { readonly action: "copied" | "deleted"; readonly path: string };
+
+/**
+ * Applies draft files from `worktree` to `repo`. A file missing from the draft is deleted in `repo` only when it
+ * existed where the draft branched off `base`. Every path is checked before any is written.
+ */
+export function landFiles(worktree: string, repo: string, base: string, paths: readonly string[]): Parsed<readonly Landing[]> {
+  const forkPoint = git(worktree, ["merge-base", "HEAD", base]);
+  if (!forkPoint.ok) return { ok: false, error: forkPoint.error };
+  const landings: Landing[] = [];
+  const problems: string[] = [];
+  for (const path of paths) {
+    const draft = statOf(join(worktree, path));
+    if (draft?.isDirectory() === true) problems.push(`${path} is a folder; land its files one by one`);
+    else if (draft !== undefined) landings.push({ action: "copied", path });
+    else if (git(worktree, ["cat-file", "-e", `${forkPoint.output}:${path}`]).ok) landings.push({ action: "deleted", path });
+    else problems.push(`${path} is not in the draft`);
+  }
+  if (problems.length > 0) return { ok: false, error: problems.join("; ") };
+  try {
+    for (const { action, path } of landings) {
+      rmSync(join(repo, path), { force: true });
+      if (action === "copied") {
+        mkdirSync(dirname(join(repo, path)), { recursive: true });
+        cpSync(join(worktree, path), join(repo, path), { verbatimSymlinks: true });
+      }
+    }
+  } catch (error: unknown) {
+    return { ok: false, error: `stopped partway: ${error instanceof Error ? error.message : String(error)}` };
+  }
+  return { ok: true, value: landings };
+}
+
+/** The file's own status, so a broken symlink still counts as present. */
+function statOf(path: string): Stats | undefined {
+  try {
+    return lstatSync(path);
+  } catch {
+    return undefined;
+  }
 }
 
 /** Whether the two refs name the same commit. */

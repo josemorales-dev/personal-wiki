@@ -145,7 +145,7 @@ describe("help", () => {
   test("lists every command when run without arguments", () => {
     const c = cli();
     expect(c.sessions()).toBe(0);
-    for (const command of ["start", "list", "show", "update", "difit", "finish", "check-format"]) {
+    for (const command of ["start", "list", "show", "update", "difit", "land", "finish", "check-format"]) {
       expect(c.stdout()).toContain(command);
     }
   });
@@ -575,6 +575,77 @@ describe("difit", () => {
     const c = cli();
     expect(c.sessions("difit", "ghost")).toBe(1);
     expect(c.stderr()).toContain("no active session 'ghost'");
+  });
+});
+
+describe("land", () => {
+  test("copies changed and new draft files into main", () => {
+    const repo = projectRepository();
+    const c = cli();
+    start(c, repo, "add-login");
+    const worktree = worktreeOf(repo, "add-login");
+    writeFileSync(join(worktree, "README.md"), "app, drafted\n");
+    mkdirSync(join(worktree, "src"));
+    writeFileSync(join(worktree, "src", "login.ts"), "login\n");
+    expect(c.sessions("land", "add-login", "README.md", "src/login.ts")).toBe(0);
+    expect(readFileSync(join(repo, "README.md"), "utf8")).toBe("app, drafted\n");
+    expect(readFileSync(join(repo, "src", "login.ts"), "utf8")).toBe("login\n");
+    expect(c.stdout()).toMatch(/copied\s+src\/login\.ts/);
+  });
+
+  test("deletes in main a file the draft deleted", () => {
+    const repo = projectRepository();
+    const c = cli();
+    start(c, repo, "add-login");
+    rmSync(join(worktreeOf(repo, "add-login"), "README.md"));
+    expect(c.sessions("land", "add-login", "README.md")).toBe(0);
+    expect(existsSync(join(repo, "README.md"))).toBe(false);
+    expect(c.stdout()).toMatch(/deleted\s+README\.md/);
+  });
+
+  test("lands nothing when a path is not in the draft", () => {
+    const repo = projectRepository();
+    const c = cli();
+    start(c, repo, "add-login");
+    writeFileSync(join(worktreeOf(repo, "add-login"), "README.md"), "app, drafted\n");
+    expect(c.sessions("land", "add-login", "README.md", "src/ghost.ts")).toBe(1);
+    expect(c.stderr()).toContain("src/ghost.ts is not in the draft");
+    expect(readFileSync(join(repo, "README.md"), "utf8")).toBe("app\n");
+  });
+
+  test("keeps a file that exists only in main", () => {
+    const repo = projectRepository();
+    const c = cli();
+    start(c, repo, "add-login");
+    writeFileSync(join(repo, "notes.md"), "mine\n");
+    expect(c.sessions("land", "add-login", "notes.md")).toBe(1);
+    expect(c.stderr()).toContain("notes.md is not in the draft");
+    expect(readFileSync(join(repo, "notes.md"), "utf8")).toBe("mine\n");
+  });
+
+  test("refuses a folder", () => {
+    const repo = projectRepository();
+    const c = cli();
+    start(c, repo, "add-login");
+    mkdirSync(join(worktreeOf(repo, "add-login"), "src"));
+    writeFileSync(join(worktreeOf(repo, "add-login"), "src", "login.ts"), "login\n");
+    expect(c.sessions("land", "add-login", "src")).toBe(1);
+    expect(c.stderr()).toContain("src is a folder; land its files one by one");
+    expect(existsSync(join(repo, "src"))).toBe(false);
+  });
+
+  test("rejects a path outside the repository", () => {
+    const c = cli();
+    start(c, projectRepository(), "add-login");
+    expect(c.sessions("land", "add-login", "../other")).toBe(2);
+    expect(c.stderr()).toContain("invalid scope path '../other'");
+  });
+
+  test("requires a path", () => {
+    const c = cli();
+    start(c, projectRepository(), "add-login");
+    expect(c.sessions("land", "add-login")).toBe(2);
+    expect(c.stderr()).toContain("missing <path>");
   });
 });
 

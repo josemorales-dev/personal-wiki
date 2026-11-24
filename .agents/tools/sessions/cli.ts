@@ -24,6 +24,7 @@ import {
   discardBranch,
   discardWorktree,
   isMerged,
+  landFiles,
   mainCheckout,
   pruneWorktrees,
   removeWorktree,
@@ -149,6 +150,17 @@ Options:
                    built in the main checkout.
 `;
 
+const LAND_HELP = `Usage: sessions land <id> <path>...
+
+Copy files from the session worktree into the main checkout, so the approved
+draft lands one unit at a time. A file the draft deleted, one that existed
+where the draft branched off, is deleted in main. Paths are files relative to
+the repository root; nothing lands when one is a folder or not in the draft.
+
+Example:
+  sessions land add-login src/login.test.ts
+`;
+
 const DIFIT_HELP = `Usage: sessions difit <id>
 
 Open the session's draft in difit, a diff viewer, in Google Chrome. It shows
@@ -165,6 +177,7 @@ const COMMANDS: readonly Command[] = [
   { name: "show", summary: "Show one session", help: SHOW_HELP, run: show },
   { name: "update", summary: "Change a session's status or scope", help: UPDATE_HELP, run: update },
   { name: "difit", summary: "Review the session's draft in difit", help: DIFIT_HELP, run: difit },
+  { name: "land", summary: "Copy draft paths from the worktree into the main checkout", help: LAND_HELP, run: land },
   { name: "finish", summary: "Remove a merged session's worktree and branch, then archive it", help: FINISH_HELP, run: finish },
   { name: "check-format", summary: "Check a session's PLAN.md against its format", help: CHECK_FORMAT_HELP, run: checkFormat },
 ];
@@ -411,6 +424,29 @@ function difit(args: readonly string[], context: Context): void {
         ["diff", `${session.worktree} against ${session.base}`],
       ]) +
       `\nRead the comments with: bunx ${DIFIT} comment get --port ${server.port} --format json\n`,
+  );
+}
+
+function land(args: readonly string[], context: Context): void {
+  const { positionals } = parseUsage(() =>
+    parseArgs({ args: [...args], allowPositionals: true, strict: true, options: {} }),
+  );
+  const [rawId, ...rawPaths] = positionals;
+  if (rawId === undefined) throw new UsageError("missing <id>");
+  if (rawPaths.length === 0) throw new UsageError("missing <path>");
+  const id = expectUsage(parseSessionId(rawId));
+  const paths = rawPaths.map((path) => expectUsage(parseScopePath(path)));
+  const session = expectCommand(new SessionStore(context.hubRoot).load(id), LIST_HINT);
+  if (!existsSync(session.worktree)) {
+    throw new CommandError(`the worktree ${session.worktree} is missing`, `run 'sessions show ${id}'`);
+  }
+  const landings = expectCommand(
+    landFiles(session.worktree, session.repo, session.base, paths),
+    "pass files relative to the repository root",
+  );
+  context.stdout(
+    `Landed ${paint(context.color, "bold", id)} in ${session.repo}\n` +
+      fields(context.color, landings.map((landing) => [landing.action, landing.path] as const)),
   );
 }
 
