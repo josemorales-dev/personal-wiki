@@ -54,5 +54,5 @@ Checks:
 - Keep steps independently actionable. Put verification only in `Checks`.
 - Use exact commands, behaviors, or assertions in `Checks`. Every task has at least one check that can go red.
 - Give code tasks `Seams`: the public interfaces where tests observe behaviour. Omit it for tasks with no code under test.
-- Write `Handoff` only when work stops unfinished, with only the applicable fields. Before writing it, stop at a green unit boundary or back out of the current unit, and make the work durable: a `wip:` commit on the task branch when commits are authorized, otherwise leave the changes uncommitted and say so under `State`.
+- Write `Handoff` only when work stops unfinished, with only the applicable fields. Before writing it, stop at a green unit boundary or back out of the current unit, and make the work durable: a `wip:` commit in the main checkout when commits are authorized, otherwise leave the changes uncommitted and say so under `State`.
 - Make each task independently resumable from its goal, notes, scope, steps, and checks.
