@@ -1,0 +1,14 @@
+{
+  "id": "difit-cleanup",
+  "tool": "claude",
+  "repo": "/Users/jose/Projects/personal-wiki",
+  "worktree": "/Users/jose/Projects/personal-wiki.worktrees/difit-cleanup",
+  "branch": "difit-cleanup",
+  "base": "main",
+  "status": "done",
+  "scope": [
+    ".agents/tools/sessions"
+  ],
+  "created": "2026-11-24T18:42:59.273Z",
+  "updated": "2026-11-24T18:45:26.308Z"
+}
