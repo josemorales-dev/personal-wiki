@@ -111,7 +111,7 @@ describe("help", () => {
   test("lists every command when run without arguments", () => {
     const c = cli();
     expect(c.sessions()).toBe(0);
-    for (const command of ["start", "list", "show", "update", "finish"]) {
+    for (const command of ["start", "list", "show", "update", "finish", "check-format"]) {
       expect(c.stdout()).toContain(command);
     }
   });
@@ -204,6 +204,92 @@ describe("start", () => {
     expect(c.stderr()).toContain("could not create the worktree");
     git(repo, "branch", "--delete", "add-login");
     start(c, repo, "add-login");
+  });
+
+  test("copies uncommitted, staged, and untracked files into the worktree without committing them", () => {
+    const repo = projectRepository();
+    writeFileSync(join(repo, "README.md"), "app, edited\n");
+    writeFileSync(join(repo, "staged.md"), "staged\n");
+    git(repo, "add", "staged.md");
+    mkdirSync(join(repo, "notes"));
+    writeFileSync(join(repo, "notes", "draft.md"), "draft\n");
+    const c = cli();
+    expect(c.sessions("start", "add-login", "--repo", repo, "--tool", "claude", "--json")).toBe(0);
+    expect(c.json()).toMatchObject({ carried: ["README.md", "notes/draft.md", "staged.md"] });
+    const worktree = worktreeOf(repo, "add-login");
+    expect(readFileSync(join(worktree, "README.md"), "utf8")).toBe("app, edited\n");
+    expect(readFileSync(join(worktree, "staged.md"), "utf8")).toBe("staged\n");
+    expect(readFileSync(join(worktree, "notes", "draft.md"), "utf8")).toBe("draft\n");
+    expect(git(worktree, "rev-list", "--count", "HEAD")).toBe("1");
+    expect(git(repo, "status", "--porcelain")).toContain("README.md");
+  });
+
+  test("lists the carried files and how to merge around them", () => {
+    const repo = projectRepository();
+    writeFileSync(join(repo, "README.md"), "app, edited\n");
+    const c = cli();
+    start(c, repo, "add-login");
+    expect(c.stdout()).toContain("README.md");
+    expect(c.stdout()).toContain("Stage only the session's own changes");
+  });
+
+  test("carries nothing when --base names another commit", () => {
+    const repo = projectRepository();
+    git(repo, "branch", "release");
+    commitIn(repo, "CHANGELOG.md");
+    writeFileSync(join(repo, "README.md"), "app, edited\n");
+    const c = cli();
+    expect(
+      c.sessions("start", "add-login", "--repo", repo, "--tool", "claude", "--base", "release", "--json"),
+    ).toBe(0);
+    expect(c.json()).toMatchObject({ carried: [] });
+    expect(readFileSync(join(worktreeOf(repo, "add-login"), "README.md"), "utf8")).toBe("app\n");
+  });
+
+  test("carries nothing from a clean repository", () => {
+    const repo = projectRepository();
+    const c = cli();
+    expect(c.sessions("start", "add-login", "--repo", repo, "--tool", "claude", "--json")).toBe(0);
+    expect(c.json()).toMatchObject({ carried: [] });
+    expect(c.sessions("start", "add-logout", "--repo", repo, "--tool", "claude")).toBe(0);
+    expect(c.stdout()).not.toContain("carried");
+  });
+
+  test("carries changes whatever the user's diff settings", () => {
+    const repo = projectRepository();
+    git(repo, "config", "diff.noprefix", "true");
+    git(repo, "config", "color.diff", "always");
+    writeFileSync(join(repo, "README.md"), "app, edited\n");
+    const c = cli();
+    start(c, repo, "add-login");
+    expect(readFileSync(join(worktreeOf(repo, "add-login"), "README.md"), "utf8")).toBe("app, edited\n");
+  });
+
+  test("lists both paths of a staged rename", () => {
+    const repo = projectRepository();
+    git(repo, "mv", "README.md", "GUIDE.md");
+    const c = cli();
+    expect(c.sessions("start", "add-login", "--repo", repo, "--tool", "claude", "--json")).toBe(0);
+    expect(c.json()).toMatchObject({ carried: ["GUIDE.md", "README.md"] });
+    expect(existsSync(join(worktreeOf(repo, "add-login"), "README.md"))).toBe(false);
+  });
+
+  test("skips an untracked nested repository and carries the rest", () => {
+    const repo = projectRepository();
+    git(repo, "init", "--quiet", "nested");
+    writeFileSync(join(repo, "nested", "inner.md"), "inner\n");
+    writeFileSync(join(repo, "notes.md"), "notes\n");
+    const c = cli();
+    expect(c.sessions("start", "add-login", "--repo", repo, "--tool", "claude", "--json")).toBe(0);
+    expect(c.json()).toMatchObject({ carried: ["notes.md"] });
+  });
+
+  test("carries when --base names the current commit", () => {
+    const repo = projectRepository();
+    writeFileSync(join(repo, "README.md"), "app, edited\n");
+    const c = cli();
+    expect(c.sessions("start", "add-login", "--repo", repo, "--tool", "claude", "--base", "HEAD", "--json")).toBe(0);
+    expect(c.json()).toMatchObject({ carried: ["README.md"] });
   });
 });
 
@@ -421,5 +507,71 @@ describe("finish", () => {
     expect(c.sessions("finish", "add-login")).toBe(0);
     expect(c.sessions("start", "add-login", "--repo", repo, "--tool", "claude")).toBe(1);
     expect(c.stderr()).toContain("session 'add-login' already exists");
+  });
+});
+
+describe("check-format", () => {
+  function writeSessionFile(c: Cli, id: string, name: string, lines: readonly string[]): void {
+    writeFileSync(join(c.hub, ".agents", "sessions", id, name), `${lines.join("\n")}\n`);
+  }
+
+  function startWithPlan(c: Cli, id: string): void {
+    start(c, projectRepository(), id);
+    writeSessionFile(c, id, "PLAN.md", [
+      "# Add login",
+      "",
+      "## Task 1: Add the form",
+      "",
+      "- Status: not started",
+      "- Goal: Users sign in.",
+      "",
+      "Scope:",
+      "",
+      "| Path | Change |",
+      "| --- | --- |",
+      "| `src/login.ts` | New form. |",
+      "",
+      "Checks:",
+      "",
+      "- `bun test` passes.",
+    ]);
+  }
+
+  test("confirms a session whose files follow the formats", () => {
+    const c = cli();
+    startWithPlan(c, "add-login");
+    writeSessionFile(c, "add-login", "SCRATCH-CODE.md", [
+      "# Proposed changes",
+      "",
+      "## `src/login.ts`",
+      "",
+      "### New file",
+      "",
+      "```ts",
+      "export const login = true;",
+      "```",
+    ]);
+    expect(c.sessions("check-format", "add-login")).toBe(0);
+    expect(c.stdout()).toContain("follow the formats");
+  });
+
+  test("lists each problem with its file and line, and fails", () => {
+    const c = cli();
+    startWithPlan(c, "add-login");
+    writeSessionFile(c, "add-login", "SCRATCH-CODE.md", [
+      "# Proposed changes",
+      "",
+      "## `src/login.ts`",
+      "",
+      "### Replace L1 to L2",
+    ]);
+    expect(c.sessions("check-format", "add-login")).toBe(1);
+    expect(c.stderr()).toContain("SCRATCH-CODE.md:5: unknown operation 'Replace L1 to L2'");
+  });
+
+  test("fails for a session that does not exist", () => {
+    const c = cli();
+    expect(c.sessions("check-format", "ghost")).toBe(1);
+    expect(c.stderr()).toContain("ghost");
   });
 });

@@ -8,7 +8,8 @@
   "scripts": {
     "test": "bun test",
     "typecheck": "tsc --noEmit",
-    "check": "tsc --noEmit && bun test"
+    "check": "tsc --noEmit && bun test",
+    "link": "mkdir -p ~/.local/bin && ln -sf \"$(pwd)/main.ts\" ~/.local/bin/sessions"
   },
   "devDependencies": {
     "@types/bun": "^1.4.5",

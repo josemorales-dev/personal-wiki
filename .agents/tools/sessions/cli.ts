@@ -1,6 +1,7 @@
-import { existsSync } from "node:fs";
-import { basename, resolve } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { basename, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
+import { checkSessionFormat } from "./format-check.ts";
 import { cell, fields, paint, relativeAge, STATUS_STYLE, table } from "./report.ts";
 import {
   overlappingSessionIds,
@@ -15,12 +16,14 @@ import {
 import { SessionStore } from "./session-store.ts";
 import {
   addWorktree,
+  carryUncommitted,
   currentBranch,
   deleteBranch,
   isMerged,
   mainCheckout,
   pruneWorktrees,
   removeWorktree,
+  sameCommit,
   siblingWorktreePath,
 } from "./worktree.ts";
 
@@ -68,6 +71,10 @@ Create a worktree for the session beside its project repository, on a new
 branch named after the session, and a session folder in the hub for its plan,
 scratch files, and state.
 
+When the session starts from the current branch, the repository's uncommitted
+changes and untracked files are copied into the new worktree, uncommitted.
+Ignored files are not copied.
+
 Options:
   --repo <path>   Project repository, or any folder inside it
   --tool <name>   Agent running the session: claude or codex
@@ -76,6 +83,16 @@ Options:
 
 Example:
   sessions start add-login --repo ~/Projects/app --tool claude
+`;
+
+const CHECK_FORMAT_HELP = `Usage: sessions check-format <id>
+
+Check a session's PLAN.md and scratch files against the PLAN and scratch
+formats in agents-coding-workflow: titles, headings, operation names, task
+fields, and that every path in the plan's Scope has a scratch section.
+
+Example:
+  sessions check-format add-login
 `;
 
 const LIST_HELP = `Usage: sessions list [--json]
@@ -125,6 +142,7 @@ const COMMANDS: readonly Command[] = [
   { name: "show", summary: "Show one session", help: SHOW_HELP, run: show },
   { name: "update", summary: "Change a session's status or scope", help: UPDATE_HELP, run: update },
   { name: "finish", summary: "Remove a merged session's worktree and branch, then archive it", help: FINISH_HELP, run: finish },
+  { name: "check-format", summary: "Check a session's PLAN.md and scratch files against their formats", help: CHECK_FORMAT_HELP, run: checkFormat },
 ];
 
 export function run(argv: readonly string[], context: Context): number {
@@ -190,10 +208,24 @@ function start(args: readonly string[], context: Context): void {
     store.release(id);
     throw new CommandError(`could not create the worktree: ${added.error}`);
   }
+  const carried = sameCommit(repo, base, "HEAD")
+    ? expectCommand(
+        carryUncommitted(repo, session.worktree),
+        `the worktree exists without the uncommitted changes; copy them by hand or run 'sessions show ${id}'`,
+      )
+    : [];
   const created = view(session, [session], store);
   if (values.json === true) {
-    context.stdout(json(created));
+    context.stdout(json({ ...created, carried }));
     return;
+  }
+  let carriedRows: readonly (readonly [string, string])[] = [];
+  let carriedNote = "";
+  if (carried.length > 0) {
+    carriedRows = [["carried", `${carried.length} uncommitted file(s) from ${base}`]];
+    carriedNote =
+      `\nCarried, uncommitted in the worktree:\n${carried.map((path) => `  ${path}\n`).join("")}` +
+      `Stage only the session's own changes. Before merging, commit or stash the copy on ${base} of any file the session also changed.\n`;
   }
   context.stdout(
     `Started ${paint(context.color, "bold", id)}\n` +
@@ -201,7 +233,9 @@ function start(args: readonly string[], context: Context): void {
         ["worktree", created.worktree],
         ["branch", `${created.branch} from ${created.base}`],
         ["folder", created.folder],
+        ...carriedRows,
       ]) +
+      carriedNote +
       "\nWrite PLAN.md in the folder and make every change in the worktree.\n",
   );
 }
@@ -347,6 +381,29 @@ function finish(args: readonly string[], context: Context): void {
         ["branch", `deleted ${session.branch}`],
         ["archive", archive],
       ]),
+  );
+}
+
+function checkFormat(args: readonly string[], context: Context): void {
+  const { positionals } = parseUsage(() =>
+    parseArgs({ args: [...args], allowPositionals: true, strict: true, options: {} }),
+  );
+  const id = expectUsage(parseSessionId(onlyPositional(positionals, "<id>")));
+  const store = new SessionStore(context.hubRoot);
+  expectCommand(store.load(id), LIST_HINT);
+  const folder = store.folder(id);
+  const problems = checkSessionFormat((fileName) => {
+    const path = join(folder, fileName);
+    return existsSync(path) ? readFileSync(path, "utf8") : undefined;
+  });
+  if (problems.length === 0) {
+    context.stdout(`${id}: PLAN.md and scratch files follow the formats\n`);
+    return;
+  }
+  throw new CommandError(
+    `${problems.length} format problem(s) in ${folder}\n` +
+      problems.map((problem) => `  ${problem.file}:${problem.line}: ${problem.message}`).join("\n"),
+    "see references/PLAN-FORMAT.md and references/SCRATCH-FORMAT.md in agents-coding-workflow",
   );
 }
 
