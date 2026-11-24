@@ -32,6 +32,23 @@ work in the style of Kent Beck.
 Combine skills when their concerns overlap and follow their referenced documents
 rather than duplicating those rules here.
 
+## Planning
+
+Every coding change goes through a session run by `agents-coding-workflow`:
+`PLAN.md`, `SCRATCH-TESTS.md`, and `SCRATCH-CODE.md`, approved together before
+any code is written. The one exception is a small, clear change, which aligns in
+one line of the reply. The rule holds on every route, including tickets built
+with `/implement` or `/implement-spec`.
+
+| Size                   | Route                                                                                                                      |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Small, clear change    | Align in one line of the reply; no session.                                                                                |
+| Fits one session       | One session.                                                                                                               |
+| Spans several sessions | `/grill-with-docs` → `/to-spec` → `/to-tickets`; each ticket is one session, built with `/implement` or `/implement-spec`. |
+| Too foggy to spec      | `/wayfinder` until the destination is a spec, then the row above.                                                          |
+
+Slash commands are user-typed: name the command and ask the user to run it.
+
 ## Skill locations
 
 Skills live only in this repository: canonical copies in `.agents/skills/`,

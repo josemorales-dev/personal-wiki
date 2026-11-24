@@ -8,11 +8,12 @@ Remove the row during cleanup before moving the completed session to
 
 ## Structure
 
-| Session | Plan | Scratch |
-| ------- | ---- | ------- |
+| Session | Plan | Tests | Code |
+| ------- | ---- | ----- | ---- |
 
 ## Fields
 
 - `Session` — unique lowercase kebab-case session id
 - `Plan` — path to `.agents/sessions/<session-id>/PLAN.md`
-- `Scratch` — path to `.agents/sessions/<session-id>/SCRATCH.md`
+- `Tests` — path to `.agents/sessions/<session-id>/SCRATCH-TESTS.md`, or `—` when the session has no tests
+- `Code` — path to `.agents/sessions/<session-id>/SCRATCH-CODE.md`

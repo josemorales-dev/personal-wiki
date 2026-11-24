@@ -1,9 +1,13 @@
-# SCRATCH.md Format
+# Scratch Files Format
 
-`SCRATCH.md` is the exact content proposal. It is presented together with
-`PLAN.md` as one approval, before any change is applied: the plan says what
-and why, the scratch shows how. Keep it small enough to review while making
-every intended content change explicit.
+A session's exact content proposal is split in two scratch files:
+`SCRATCH-TESTS.md` holds the test changes and `SCRATCH-CODE.md` holds every
+other content change (source, config, docs). Both are presented together with
+`PLAN.md` as one approval, before any change is applied: the plan says what and
+why, the tests say how behaviour is checked, the code shows how it is built.
+Omit `SCRATCH-TESTS.md` when the work has no tests. Keep each file small enough
+to review while making every intended content change explicit. Both files use
+the structure below.
 
 ## Structure
 
@@ -45,9 +49,12 @@ Complete proposed contents of the new file.
 ## Rules
 
 - Use `# Proposed Changes` as the title.
+- Title `SCRATCH-TESTS.md` `# Proposed Tests` and `SCRATCH-CODE.md`
+  `# Proposed Changes`.
 - Give every content target in the plan's `Scope` one `##` section with its
-  exact repository-relative path. Do not include normal controls, session, or
-  archive bookkeeping.
+  exact repository-relative path, in the file that matches it: test files in
+  `SCRATCH-TESTS.md`, everything else in `SCRATCH-CODE.md`. Do not include
+  normal controls, session, or archive bookkeeping.
 - Give each change a `###` operation heading. Use one of:
   - `Insert before L<n>` or `Insert after L<n>`
   - `Replace L<n>–L<n>`
@@ -65,10 +72,10 @@ Complete proposed contents of the new file.
 - List whole-file removals under `## Files to Delete` with the original full
   line range. Do not reproduce the deleted file.
 - Keep validation output, implementation notes, and ordinary session cleanup
-  out of `SCRATCH.md`; those belong in the plan or final report.
-- In test-first work, list the tests first, then the code that turns them
-  green.
+  out of the scratch files; those belong in the plan or final report.
+- Order `SCRATCH-TESTS.md` in the slice order the build follows, one tracer
+  bullet per unit.
 - If implementation must differ materially from the approved proposal, update
-  `PLAN.md` and `SCRATCH.md` and request approval again before applying the
-  difference. Refactors inside the approved scope that keep the checks green are
-  not material.
+  `PLAN.md` and the affected scratch file and request approval again before
+  applying the difference. Refactors inside the approved scope that keep the
+  checks green are not material.
