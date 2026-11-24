@@ -3,8 +3,6 @@ name: agents-code-standards
 description: Apply technology-independent standards when implementing, refactoring, or reviewing code.
 ---
 
-Read [skill resource and project path rules](../PATHS.md) before applying this skill.
-
 # Code standards
 
 Read [references/ENGINEERING_STANDARDS.md](references/ENGINEERING_STANDARDS.md) before code changes or review. Apply the selected project's documented standards where they specialize these defaults.

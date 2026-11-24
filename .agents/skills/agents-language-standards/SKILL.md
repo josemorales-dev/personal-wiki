@@ -3,11 +3,9 @@ name: agents-language-standards
 description: Routes programming-language work to the project's mandatory language-specific standards. Use when reading, writing, reviewing, testing, or configuring TypeScript, TSX, JavaScript checked by TypeScript, declaration files, tsconfig, or typed ESLint rules.
 ---
 
-Read [skill resource and project path rules](../PATHS.md) before applying this skill.
-
 # Programming language standards
 
-Identify every programming language touched by the task. Read each matching reference completely before inspecting or changing that language's code or configuration.
+Identify every programming language touched by the task. Read each matching reference completely before writing or reviewing that language's code or configuration. Reading code to explore it does not need the reference.
 
 | Read this file                       | When the task involves                                                                                                                                          |
 | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -16,7 +16,7 @@ Both files use the structure below.
 
 ## `path/to/existing-file`
 
-### Replace L42 to L57
+### Replace
 
 ```diff
  unchanged context
@@ -25,7 +25,7 @@ Both files use the structure below.
  unchanged context
 ```
 
-### Insert after L80
+### Insert
 
 ```diff
  existing anchor
@@ -43,7 +43,7 @@ Complete proposed contents of the new file.
 
 ## Files to delete
 
-- `path/to/obsolete-file`, entire file, L1 to L88
+- `path/to/obsolete-file`
 ````
 
 ## Rules
@@ -55,21 +55,22 @@ Complete proposed contents of the new file.
   everything else in `SCRATCH-CODE.md`. Do not include normal controls,
   session, or archive bookkeeping.
 - Give each change a `###` operation heading. Use one of:
-  - `Insert before L<n>` or `Insert after L<n>`
-  - `Replace L<n> to L<n>`
-  - `Delete L<n> to L<n>`
+  - `Insert`
+  - `Replace`
+  - `Delete`
   - `New file`
   - `Rename from path/to/old-file`
   - `New symlink to path/to/target`
-- Line numbers refer to the original file when the proposal is prepared.
 - Show existing-file changes as focused `diff` snippets. Include enough
-  unchanged context to locate each hunk, and show removed and added lines
-  explicitly. The snippets need not be directly applicable patches.
+  unchanged context to match one place in the file, and show removed and
+  added lines explicitly. The context lines locate the hunk, so read a file
+  by search or line range, not whole. The snippets need not be directly
+  applicable patches.
 - Do not show an entire existing file, use ellipses inside a hunk, or replace
   exact content with a prose summary. New files are the whole-file exception.
 - Use an outer fence longer than any fence contained in the proposed content.
-- List whole-file removals under `## Files to delete` with the original full
-  line range. Do not reproduce the deleted file.
+- List whole-file removals under `## Files to delete` by path. Do not
+  reproduce the deleted file.
 - Keep validation output, implementation notes, and ordinary session cleanup
   out of the scratch files; those belong in the plan or final report.
 - Order `SCRATCH-TESTS.md` in the slice order the build follows, one tracer
