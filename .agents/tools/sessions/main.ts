@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { run } from "./cli.ts";
+import { openInChrome, startDifit } from "./difit.ts";
 import { mainCheckout } from "./worktree.ts";
 
 const hub = mainCheckout(import.meta.dir);
@@ -14,6 +15,8 @@ process.exitCode = run(process.argv.slice(2), {
   hubRoot: hub.value,
   color,
   now: () => new Date(),
+  startDifit,
+  openInChrome,
   stdout: (text) => {
     process.stdout.write(text);
   },

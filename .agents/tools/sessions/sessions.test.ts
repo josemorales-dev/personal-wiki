@@ -3,6 +3,8 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync,
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { run, type Context } from "./cli.ts";
+import type { DifitServer, Outcome } from "./difit.ts";
+import type { Parsed } from "./session.ts";
 
 const START = new Date("2026-11-24T12:00:00.000Z");
 const temporaryDirectories: string[] = [];
@@ -69,13 +71,29 @@ type Cli = {
   stderr(): string;
   json(): unknown;
   advanceMinutes(minutes: number): void;
+  /** Each call the CLI made to start difit, in order. */
+  difitCalls(): readonly DifitCall[];
+  /** Makes the next difit start fail with `error`. */
+  failDifit(error: string): void;
+  /** Each URL the CLI opened in Chrome, in order. */
+  openedUrls(): readonly string[];
+  /** Makes the next attempt to open Chrome fail with `error`. */
+  failChrome(error: string): void;
 };
+
+type DifitCall = { readonly directory: string; readonly args: readonly string[] };
+
+const DIFIT_SERVER: DifitServer = { port: 4967, url: "http://localhost:4967" };
 
 function cli(color = false): Cli {
   const hub = temporaryDirectory();
   let now = START;
   let stdout = "";
   let stderr = "";
+  const difitCalls: DifitCall[] = [];
+  let difitResult: Parsed<DifitServer> = { ok: true, value: DIFIT_SERVER };
+  const openedUrls: string[] = [];
+  let chromeResult: Outcome = { ok: true };
   const context: Context = {
     hubRoot: hub,
     color,
@@ -85,6 +103,14 @@ function cli(color = false): Cli {
     },
     stderr: (text) => {
       stderr += text;
+    },
+    startDifit: (directory, args) => {
+      difitCalls.push({ directory, args });
+      return difitResult;
+    },
+    openInChrome: (url) => {
+      openedUrls.push(url);
+      return chromeResult;
     },
   };
   return {
@@ -100,6 +126,14 @@ function cli(color = false): Cli {
     advanceMinutes(minutes) {
       now = new Date(now.getTime() + minutes * 60_000);
     },
+    difitCalls: () => difitCalls,
+    failDifit(error) {
+      difitResult = { ok: false, error };
+    },
+    openedUrls: () => openedUrls,
+    failChrome(error) {
+      chromeResult = { ok: false, error };
+    },
   };
 }
 
@@ -111,7 +145,7 @@ describe("help", () => {
   test("lists every command when run without arguments", () => {
     const c = cli();
     expect(c.sessions()).toBe(0);
-    for (const command of ["start", "list", "show", "update", "finish", "check-format"]) {
+    for (const command of ["start", "list", "show", "update", "difit", "finish", "check-format"]) {
       expect(c.stdout()).toContain(command);
     }
   });
@@ -453,6 +487,69 @@ describe("list", () => {
   });
 });
 
+describe("difit", () => {
+  test("opens difit on the worktree against the session base, with untracked files", () => {
+    const repo = projectRepository();
+    const c = cli();
+    start(c, repo, "add-login");
+    expect(c.sessions("difit", "add-login")).toBe(0);
+    expect(c.difitCalls()).toEqual([
+      {
+        directory: worktreeOf(repo, "add-login"),
+        args: [".", "main", "--merge-base", "--include-untracked", "--background", "--no-open"],
+      },
+    ]);
+  });
+
+  test("prints the URL and the port for reading comments", () => {
+    const c = cli();
+    start(c, projectRepository(), "add-login");
+    expect(c.sessions("difit", "add-login")).toBe(0);
+    expect(c.stdout()).toContain("http://localhost:4967");
+    expect(c.stdout()).toContain("comment get --port 4967 --format json");
+  });
+
+  test("opens the review in Chrome", () => {
+    const c = cli();
+    start(c, projectRepository(), "add-login");
+    expect(c.sessions("difit", "add-login")).toBe(0);
+    expect(c.openedUrls()).toEqual(["http://localhost:4967"]);
+  });
+
+  test("warns and still prints the URL when Chrome does not open", () => {
+    const c = cli();
+    start(c, projectRepository(), "add-login");
+    c.failChrome("Unable to find application named 'Google Chrome'");
+    expect(c.sessions("difit", "add-login")).toBe(0);
+    expect(c.stderr()).toContain("could not open Chrome: Unable to find application named 'Google Chrome'");
+    expect(c.stdout()).toContain("http://localhost:4967");
+  });
+
+  test("fails with difit's error when the server does not start", () => {
+    const c = cli();
+    start(c, projectRepository(), "add-login");
+    c.failDifit("difit failed to start: boom");
+    expect(c.sessions("difit", "add-login")).toBe(1);
+    expect(c.stderr()).toContain("difit failed to start: boom");
+  });
+
+  test("fails without starting difit when the worktree is missing", () => {
+    const repo = projectRepository();
+    const c = cli();
+    start(c, repo, "add-login");
+    rmSync(worktreeOf(repo, "add-login"), { recursive: true, force: true });
+    expect(c.sessions("difit", "add-login")).toBe(1);
+    expect(c.stderr()).toContain("is missing");
+    expect(c.difitCalls()).toEqual([]);
+  });
+
+  test("fails for a session that does not exist", () => {
+    const c = cli();
+    expect(c.sessions("difit", "ghost")).toBe(1);
+    expect(c.stderr()).toContain("no active session 'ghost'");
+  });
+});
+
 describe("finish", () => {
   test("refuses a branch that is not merged and keeps the worktree", () => {
     const repo = projectRepository();
@@ -500,6 +597,20 @@ describe("finish", () => {
     expect(git(repo, "branch", "--list", "add-login")).toBe("");
   });
 
+  test("discards an unmerged draft with uncommitted and untracked changes when asked", () => {
+    const repo = projectRepository();
+    const c = cli();
+    start(c, repo, "add-login");
+    const worktree = worktreeOf(repo, "add-login");
+    commitIn(worktree, "login.ts");
+    writeFileSync(join(worktree, "README.md"), "app, drafted\n");
+    writeFileSync(join(worktree, "draft.ts"), "draft\n");
+    expect(c.sessions("finish", "add-login", "--discard-draft")).toBe(0);
+    expect(existsSync(worktree)).toBe(false);
+    expect(git(repo, "branch", "--list", "add-login")).toBe("");
+    expect(existsSync(join(c.hub, ".agents", "archive", "sessions", "add-login"))).toBe(true);
+  });
+
   test("keeps an archived id reserved", () => {
     const repo = projectRepository();
     const c = cli();
@@ -537,36 +648,19 @@ describe("check-format", () => {
     ]);
   }
 
-  test("confirms a session whose files follow the formats", () => {
+  test("confirms a plan that follows the format", () => {
     const c = cli();
     startWithPlan(c, "add-login");
-    writeSessionFile(c, "add-login", "SCRATCH-CODE.md", [
-      "# Proposed changes",
-      "",
-      "## `src/login.ts`",
-      "",
-      "### New file",
-      "",
-      "```ts",
-      "export const login = true;",
-      "```",
-    ]);
     expect(c.sessions("check-format", "add-login")).toBe(0);
-    expect(c.stdout()).toContain("follow the formats");
+    expect(c.stdout()).toContain("PLAN.md follows the format");
   });
 
   test("lists each problem with its file and line, and fails", () => {
     const c = cli();
-    startWithPlan(c, "add-login");
-    writeSessionFile(c, "add-login", "SCRATCH-CODE.md", [
-      "# Proposed changes",
-      "",
-      "## `src/login.ts`",
-      "",
-      "### Replace L1 to L2",
-    ]);
+    start(c, projectRepository(), "add-login");
+    writeSessionFile(c, "add-login", "PLAN.md", ["# Add login", "", "## Notes"]);
     expect(c.sessions("check-format", "add-login")).toBe(1);
-    expect(c.stderr()).toContain("SCRATCH-CODE.md:5: unknown operation 'Replace L1 to L2'");
+    expect(c.stderr()).toContain("PLAN.md:3: '## Notes' must be '## Task N: <verb phrase>' or '## Handoff'");
   });
 
   test("fails for a session that does not exist", () => {

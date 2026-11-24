@@ -101,3 +101,13 @@ export function pruneWorktrees(repo: string): GitOutcome {
 export function deleteBranch(repo: string, branch: string): GitOutcome {
   return git(repo, ["branch", "-d", branch]);
 }
+
+/** Removes a draft worktree even when it has uncommitted or untracked changes. */
+export function discardWorktree(repo: string, path: string): GitOutcome {
+  return git(repo, ["worktree", "remove", "--force", path]);
+}
+
+/** Deletes a draft branch even when it is not merged. */
+export function discardBranch(repo: string, branch: string): GitOutcome {
+  return git(repo, ["branch", "-D", branch]);
+}

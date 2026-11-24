@@ -35,9 +35,10 @@ rather than duplicating those rules here.
 
 ## Planning
 
-Every coding change goes through a session run by `agents-coding-workflow`:
-`PLAN.md`, `SCRATCH-TESTS.md`, and `SCRATCH-CODE.md`, approved together before
-any code is written. The one exception is a small, clear change, which aligns in
+Every coding change goes through a session run by `agents-coding-workflow`: a
+`PLAN.md` and a draft of the change in the session worktree, approved together
+in difit before the change is built test-first in the main checkout. The one
+exception is a small, clear change, which aligns in
 one line of the reply. The rule holds on every route, including tickets built
 with `/implement` or `/implement-spec`.
 

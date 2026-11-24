@@ -1,7 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { checkSessionFormat } from "./format-check.ts";
+import { DIFIT, type DifitServer, type Outcome } from "./difit.ts";
+import { checkPlanFormat } from "./format-check.ts";
 import { cell, fields, paint, relativeAge, STATUS_STYLE, table } from "./report.ts";
 import {
   overlappingSessionIds,
@@ -19,6 +20,8 @@ import {
   carryUncommitted,
   currentBranch,
   deleteBranch,
+  discardBranch,
+  discardWorktree,
   isMerged,
   mainCheckout,
   pruneWorktrees,
@@ -33,6 +36,10 @@ export type Context = {
   readonly now: () => Date;
   readonly stdout: (text: string) => void;
   readonly stderr: (text: string) => void;
+  /** Starts difit in `directory` with `args`, in the background. */
+  readonly startDifit: (directory: string, args: readonly string[]) => Parsed<DifitServer>;
+  /** Opens `url` in Google Chrome, in front of other windows. */
+  readonly openInChrome: (url: string) => Outcome;
 };
 
 const EXIT_OK = 0;
@@ -68,8 +75,8 @@ const LIST_HINT = "run 'sessions list' to see active sessions";
 const START_HELP = `Usage: sessions start <id> --repo <path> --tool <claude|codex> [--base <ref>] [--json]
 
 Create a worktree for the session beside its project repository, on a new
-branch named after the session, and a session folder in the hub for its plan,
-scratch files, and state.
+branch named after the session, and a session folder in the hub for its plan
+and state. The worktree holds the session's draft.
 
 When the session starts from the current branch, the repository's uncommitted
 changes and untracked files are copied into the new worktree, uncommitted.
@@ -87,9 +94,8 @@ Example:
 
 const CHECK_FORMAT_HELP = `Usage: sessions check-format <id>
 
-Check a session's PLAN.md and scratch files against the PLAN and scratch
-formats in agents-coding-workflow: titles, headings, operation names, task
-fields, and that every path in the plan's Scope has a scratch section.
+Check a session's PLAN.md against the PLAN format in agents-coding-workflow:
+the title, the task headings, and each task's fields.
 
 Example:
   sessions check-format add-login
@@ -129,11 +135,26 @@ Example:
   sessions update add-login --status building --scope src/auth --scope README.md
 `;
 
-const FINISH_HELP = `Usage: sessions finish <id>
+const FINISH_HELP = `Usage: sessions finish <id> [--discard-draft]
 
 Remove the worktree and branch of a session whose branch is merged into its
 base, then move the session folder to the archive. A worktree with uncommitted
 changes or an unmerged branch is left untouched.
+
+Options:
+  --discard-draft  Remove the worktree and branch even when the draft is
+                   uncommitted or unmerged. Pass it once the approved change is
+                   built in the main checkout.
+`;
+
+const DIFIT_HELP = `Usage: sessions difit <id>
+
+Open the session's draft in difit, a diff viewer, in Google Chrome. It shows
+every committed, uncommitted, and untracked change in the worktree against the
+session base. The server keeps running in the background; print the review
+comments with:
+
+  bunx ${DIFIT} comment get --port <port> --format json
 `;
 
 const COMMANDS: readonly Command[] = [
@@ -141,8 +162,9 @@ const COMMANDS: readonly Command[] = [
   { name: "list", summary: "Show active sessions, stale worktrees, and overlapping scopes", help: LIST_HELP, run: list },
   { name: "show", summary: "Show one session", help: SHOW_HELP, run: show },
   { name: "update", summary: "Change a session's status or scope", help: UPDATE_HELP, run: update },
+  { name: "difit", summary: "Review the session's draft in difit", help: DIFIT_HELP, run: difit },
   { name: "finish", summary: "Remove a merged session's worktree and branch, then archive it", help: FINISH_HELP, run: finish },
-  { name: "check-format", summary: "Check a session's PLAN.md and scratch files against their formats", help: CHECK_FORMAT_HELP, run: checkFormat },
+  { name: "check-format", summary: "Check a session's PLAN.md against its format", help: CHECK_FORMAT_HELP, run: checkFormat },
 ];
 
 export function run(argv: readonly string[], context: Context): number {
@@ -347,29 +369,62 @@ function update(args: readonly string[], context: Context): void {
   context.stdout(`Updated ${paint(context.color, "bold", id)}: ${changes.join("; ")}\n`);
 }
 
-function finish(args: readonly string[], context: Context): void {
+function difit(args: readonly string[], context: Context): void {
   const { positionals } = parseUsage(() =>
     parseArgs({ args: [...args], allowPositionals: true, strict: true, options: {} }),
   );
   const id = expectUsage(parseSessionId(onlyPositional(positionals, "<id>")));
+  const session = expectCommand(new SessionStore(context.hubRoot).load(id), LIST_HINT);
+  if (!existsSync(session.worktree)) {
+    throw new CommandError(`the worktree ${session.worktree} is missing`, `run 'sessions show ${id}'`);
+  }
+  const server = expectCommand(
+    context.startDifit(session.worktree, [".", session.base, "--merge-base", "--include-untracked", "--background", "--no-open"]),
+    `run 'bunx ${DIFIT} . ${session.base}' in ${session.worktree} to see the full error`,
+  );
+  const opened = context.openInChrome(server.url);
+  if (!opened.ok) {
+    context.stderr(`${paint(context.color, "yellow", "warning")}: could not open Chrome: ${opened.error}\n`);
+  }
+  context.stdout(
+    `Reviewing ${paint(context.color, "bold", id)} in difit\n` +
+      fields(context.color, [
+        ["url", server.url],
+        ["port", String(server.port)],
+        ["diff", `${session.worktree} against ${session.base}`],
+      ]) +
+      `\nRead the comments with: bunx ${DIFIT} comment get --port ${server.port} --format json\n`,
+  );
+}
+
+function finish(args: readonly string[], context: Context): void {
+  const { values, positionals } = parseUsage(() =>
+    parseArgs({
+      args: [...args],
+      allowPositionals: true,
+      strict: true,
+      options: { "discard-draft": { type: "boolean" } },
+    }),
+  );
+  const id = expectUsage(parseSessionId(onlyPositional(positionals, "<id>")));
+  const discard = values["discard-draft"] === true;
   const store = new SessionStore(context.hubRoot);
   const session = expectCommand(store.load(id), LIST_HINT);
-  if (!isMerged(session.repo, session.branch, session.base)) {
+  if (!discard && !isMerged(session.repo, session.branch, session.base)) {
     throw new CommandError(
       `branch '${session.branch}' is not merged into '${session.base}'`,
-      `merge it first; to discard the work, remove the worktree and branch yourself`,
+      "merge it first, or pass --discard-draft once the approved change is built in the main checkout",
     );
   }
-  const cleanup = existsSync(session.worktree)
-    ? removeWorktree(session.repo, session.worktree)
-    : pruneWorktrees(session.repo);
+  const remove = discard ? discardWorktree : removeWorktree;
+  const cleanup = existsSync(session.worktree) ? remove(session.repo, session.worktree) : pruneWorktrees(session.repo);
   if (!cleanup.ok) {
     throw new CommandError(
       `could not remove the worktree: ${cleanup.error}`,
       "commit or discard the changes in the worktree, then run finish again",
     );
   }
-  const deleted = deleteBranch(session.repo, session.branch);
+  const deleted = (discard ? discardBranch : deleteBranch)(session.repo, session.branch);
   if (!deleted.ok) {
     throw new CommandError(`could not delete branch '${session.branch}': ${deleted.error}`);
   }
@@ -392,18 +447,16 @@ function checkFormat(args: readonly string[], context: Context): void {
   const store = new SessionStore(context.hubRoot);
   expectCommand(store.load(id), LIST_HINT);
   const folder = store.folder(id);
-  const problems = checkSessionFormat((fileName) => {
-    const path = join(folder, fileName);
-    return existsSync(path) ? readFileSync(path, "utf8") : undefined;
-  });
+  const plan = join(folder, "PLAN.md");
+  const problems = checkPlanFormat(existsSync(plan) ? readFileSync(plan, "utf8") : undefined);
   if (problems.length === 0) {
-    context.stdout(`${id}: PLAN.md and scratch files follow the formats\n`);
+    context.stdout(`${id}: PLAN.md follows the format\n`);
     return;
   }
   throw new CommandError(
     `${problems.length} format problem(s) in ${folder}\n` +
       problems.map((problem) => `  ${problem.file}:${problem.line}: ${problem.message}`).join("\n"),
-    "see references/PLAN-FORMAT.md and references/SCRATCH-FORMAT.md in agents-coding-workflow",
+    "see references/PLAN-FORMAT.md in agents-coding-workflow",
   );
 }
 
@@ -428,8 +481,8 @@ function mainHelp(): string {
   const commands = COMMANDS.map((command) => `  ${command.name.padEnd(width)}  ${command.summary}`).join("\n");
   return `sessions: track agent coding sessions across repositories
 
-Each session gets a Git worktree beside its project repository and a folder in
-the hub for its plan, scratch files, and state.
+Each session gets a Git worktree beside its project repository for its draft,
+and a folder in the hub for its plan and state.
 
 Usage:
   sessions <command> [options]
