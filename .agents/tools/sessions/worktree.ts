@@ -1,8 +1,6 @@
 import { cpSync, mkdirSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
-import type { Parsed } from "./session.ts";
-
-export type GitOutcome = { readonly ok: true } | { readonly ok: false; readonly error: string };
+import type { Outcome, Parsed } from "./session.ts";
 
 type GitResult = { readonly ok: true; readonly output: string } | { readonly ok: false; readonly error: string };
 
@@ -30,7 +28,7 @@ export function siblingWorktreePath(repo: string, id: string): string {
   return join(dirname(repo), `${basename(repo)}.worktrees`, id);
 }
 
-export function addWorktree(repo: string, path: string, branch: string, base: string): GitOutcome {
+export function addWorktree(repo: string, path: string, branch: string, base: string): Outcome {
   return git(repo, ["worktree", "add", "-b", branch, path, base]);
 }
 
@@ -88,26 +86,26 @@ export function isMerged(repo: string, branch: string, base: string): boolean {
 }
 
 /** Refuses a worktree with uncommitted changes. */
-export function removeWorktree(repo: string, path: string): GitOutcome {
+export function removeWorktree(repo: string, path: string): Outcome {
   return git(repo, ["worktree", "remove", path]);
 }
 
 /** Forgets worktrees whose folders were deleted by hand. */
-export function pruneWorktrees(repo: string): GitOutcome {
+export function pruneWorktrees(repo: string): Outcome {
   return git(repo, ["worktree", "prune"]);
 }
 
 /** Refuses a branch that is not merged. */
-export function deleteBranch(repo: string, branch: string): GitOutcome {
+export function deleteBranch(repo: string, branch: string): Outcome {
   return git(repo, ["branch", "-d", branch]);
 }
 
 /** Removes a draft worktree even when it has uncommitted or untracked changes. */
-export function discardWorktree(repo: string, path: string): GitOutcome {
+export function discardWorktree(repo: string, path: string): Outcome {
   return git(repo, ["worktree", "remove", "--force", path]);
 }
 
 /** Deletes a draft branch even when it is not merged. */
-export function discardBranch(repo: string, branch: string): GitOutcome {
+export function discardBranch(repo: string, branch: string): Outcome {
   return git(repo, ["branch", "-D", branch]);
 }

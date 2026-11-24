@@ -27,6 +27,8 @@ export type Session = {
   readonly updated: string;
 };
 
+export type Outcome = { readonly ok: true } | { readonly ok: false; readonly error: string };
+
 export type Parsed<T> =
   | { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly error: string };

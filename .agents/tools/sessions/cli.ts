@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { DIFIT, type DifitServer, type Outcome } from "./difit.ts";
+import { DIFIT, type DifitServer } from "./difit.ts";
 import { checkPlanFormat } from "./format-check.ts";
 import { cell, fields, paint, relativeAge, STATUS_STYLE, table } from "./report.ts";
 import {
@@ -11,6 +11,7 @@ import {
   parseStatus,
   parseTool,
   STATUSES,
+  type Outcome,
   type Parsed,
   type Session,
 } from "./session.ts";
@@ -269,7 +270,7 @@ function list(args: readonly string[], context: Context): void {
   const store = new SessionStore(context.hubRoot);
   const { sessions, problems } = store.loadActive();
   for (const problem of problems) {
-    context.stderr(`${paint(context.color, "yellow", "warning")}: skipped ${problem}\n`);
+    warn(context, `skipped ${problem}`);
   }
   const views = sessions.map((session) => view(session, sessions, store));
   if (values.json === true) {
@@ -384,7 +385,7 @@ function difit(args: readonly string[], context: Context): void {
   );
   const opened = context.openInChrome(server.url);
   if (!opened.ok) {
-    context.stderr(`${paint(context.color, "yellow", "warning")}: could not open Chrome: ${opened.error}\n`);
+    warn(context, `could not open Chrome: ${opened.error}`);
   }
   context.stdout(
     `Reviewing ${paint(context.color, "bold", id)} in difit\n` +
@@ -548,6 +549,10 @@ function expectUsage<T>(parsed: Parsed<T>): T {
 function expectCommand<T>(parsed: Parsed<T>, hint?: string): T {
   if (!parsed.ok) throw new CommandError(parsed.error, hint);
   return parsed.value;
+}
+
+function warn(context: Context, message: string): void {
+  context.stderr(`${paint(context.color, "yellow", "warning")}: ${message}\n`);
 }
 
 function json(value: unknown): string {

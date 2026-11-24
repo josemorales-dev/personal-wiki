@@ -3,8 +3,8 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync,
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { run, type Context } from "./cli.ts";
-import type { DifitServer, Outcome } from "./difit.ts";
-import type { Parsed } from "./session.ts";
+import type { DifitServer } from "./difit.ts";
+import type { Outcome, Parsed } from "./session.ts";
 
 const START = new Date("2026-11-24T12:00:00.000Z");
 const temporaryDirectories: string[] = [];

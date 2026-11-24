@@ -1,12 +1,10 @@
-import type { Parsed } from "./session.ts";
+import type { Outcome, Parsed } from "./session.ts";
 
 /** The difit release the sessions tool runs, pinned so a new release never changes the review mid-session. */
 export const DIFIT = "difit@5.0.12";
 
 /** A difit server running in the background. */
 export type DifitServer = { readonly url: string; readonly port: number };
-
-export type Outcome = { readonly ok: true } | { readonly ok: false; readonly error: string };
 
 /** Starts difit in `directory` with `args`; the server outlives this process. */
 export function startDifit(directory: string, args: readonly string[]): Parsed<DifitServer> {
