@@ -505,7 +505,7 @@ describe("difit", () => {
     const c = cli();
     start(c, projectRepository(), "add-login");
     expect(c.sessions("difit", "add-login")).toBe(0);
-    expect(c.stdout()).toContain("http://localhost:4967");
+    expect(c.stdout()).toContain("http://localhost:4967/?session=add-login");
     expect(c.stdout()).toContain("comment get --port 4967 --format json");
   });
 
@@ -513,7 +513,7 @@ describe("difit", () => {
     const c = cli();
     start(c, projectRepository(), "add-login");
     expect(c.sessions("difit", "add-login")).toBe(0);
-    expect(c.openedUrls()).toEqual(["http://localhost:4967"]);
+    expect(c.openedUrls()).toEqual(["http://localhost:4967/?session=add-login"]);
   });
 
   test("warns and still prints the URL when Chrome does not open", () => {

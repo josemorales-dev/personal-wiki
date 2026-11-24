@@ -383,14 +383,15 @@ function difit(args: readonly string[], context: Context): void {
     context.startDifit(session.worktree, [".", session.base, "--merge-base", "--include-untracked", "--background", "--no-open"]),
     `run 'bunx ${DIFIT} . ${session.base}' in ${session.worktree} to see the full error`,
   );
-  const opened = context.openInChrome(server.url);
+  const url = `${server.url}/?session=${id}`;
+  const opened = context.openInChrome(url);
   if (!opened.ok) {
     warn(context, `could not open Chrome: ${opened.error}`);
   }
   context.stdout(
     `Reviewing ${paint(context.color, "bold", id)} in difit\n` +
       fields(context.color, [
-        ["url", server.url],
+        ["url", url],
         ["port", String(server.port)],
         ["diff", `${session.worktree} against ${session.base}`],
       ]) +
