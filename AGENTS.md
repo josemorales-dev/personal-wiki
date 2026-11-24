@@ -40,3 +40,17 @@ name its path (with Claude Code, also `--add-dir <path>`). Add a skill by placin
 it in `.agents/skills/<name>/` and linking `.claude/skills/<name>` to
 `../../.agents/skills/<name>`. Bundled skill references resolve from the loaded
 skill directory; see [.agents/skills/PATHS.md](.agents/skills/PATHS.md).
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues for josemorales-dev/personal-wiki (gh CLI). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default vocabulary: needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
