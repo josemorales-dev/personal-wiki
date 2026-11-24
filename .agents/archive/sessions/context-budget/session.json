@@ -1,0 +1,17 @@
+{
+  "id": "context-budget",
+  "tool": "claude",
+  "repo": "/Users/jose/Projects/personal-wiki",
+  "worktree": "/Users/jose/Projects/personal-wiki.worktrees/context-budget",
+  "branch": "context-budget",
+  "base": "main",
+  "status": "done",
+  "scope": [
+    ".agents/skills/agents-coding-workflow/references/SCRATCH-FORMAT.md",
+    ".agents/skills/agents-coding-workflow/SKILL.md",
+    ".agents/skills/agents-code-standards/SKILL.md",
+    ".agents/skills/agents-language-standards/SKILL.md"
+  ],
+  "created": "2026-11-24T17:26:49.569Z",
+  "updated": "2026-11-24T17:35:15.611Z"
+}
