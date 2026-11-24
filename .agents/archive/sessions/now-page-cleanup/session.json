@@ -1,0 +1,14 @@
+{
+  "id": "now-page-cleanup",
+  "tool": "claude",
+  "repo": "/Users/jose/Projects/website",
+  "worktree": "/Users/jose/Projects/website.worktrees/now-page-cleanup",
+  "branch": "now-page-cleanup",
+  "base": "feat/213-now-page",
+  "status": "done",
+  "scope": [
+    "apps/web/src/lib/events-feed.ts,apps/web/src/lib/map-now.ts,apps/web/src/pages/now.astro,apps/web/tests/map-now.test.ts"
+  ],
+  "created": "2026-11-24T20:30:53.298Z",
+  "updated": "2026-11-24T20:43:30.227Z"
+}
