@@ -31,9 +31,11 @@ Look for the originating spec, in this order:
 3. A spec file under `docs/`, `specs/`, or `.scratch/` matching the branch name or feature.
 4. If nothing is found, ask the user where the spec is. If they say there isn't one, the **Spec** sub-agent will skip and report "no spec available".
 
+Alongside the spec, give the Spec sub-agent the project's `GLOSSARY.md` and any ADRs under `docs/adr/` that touch the diff, even when Git ignores them. Its brief also asks: "(d) definitions or decisions in these docs that now disagree with the code."
+
 ### 3. Identify the standards sources
 
-Search the repo for every file that documents how code should be written. When `CODING_STANDARDS.md` or `CONTRIBUTING.md` exists, it must be on the list.
+Search the repo for every file that documents how code should be written. When `CODING_STANDARDS.md` or `CONTRIBUTING.md` exists, it must be on the list. Always add the `agents-code-standards` engineering standards, plus the `agents-language-standards` references for each language in the diff. Locate them through skill discovery. Where one of these conflicts with a standard the repo documents, the repo wins.
 
 On top of whatever the repo documents, the Standards axis always carries the **smell baseline** below: a fixed set of Fowler code smells (_Refactoring_, ch.3) that applies even when a repo documents nothing. Two rules bind it:
 

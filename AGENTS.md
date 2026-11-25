@@ -38,13 +38,15 @@ rather than duplicating those rules here.
 Every coding change goes through a session run by `agents-coding-workflow`: a
 `PLAN.md` and a draft of the change in the session worktree, approved together
 in difit before the change is built test-first in the main checkout. The one
-exception is a small, clear change, which aligns in
-one line of the reply. The rule holds on every route, including tickets built
-with `/implement` or `/implement-spec`.
+exception is a small change: the user named the exact edit, it touches one
+file, it removes no test, and it reverses no decision the user made earlier. A
+change that fails any part, or that you are unsure of, is a session. The rule
+holds on every route, including tickets built with `/implement` or
+`/implement-spec`.
 
 | Size                   | Route                                                                                                                      |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Small, clear change    | Align in one line of the reply; no session.                                                                                |
+| Small change           | Name the route in one line and ask a yes-or-no about this change alone; no session. Checks and review still run.           |
 | Fits one session       | One session.                                                                                                               |
 | Spans several sessions | `/grill-with-docs` → `/to-spec` → `/to-tickets`; each ticket is one session, built with `/implement` or `/implement-spec`. |
 | Too foggy to spec      | `/wayfinder` until the destination is a spec, then the row above.                                                          |

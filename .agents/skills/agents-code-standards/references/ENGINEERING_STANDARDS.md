@@ -46,7 +46,12 @@ Consult the relevant file when work touches these domains:
 ### 6) Self-Documenting Code
 
 - Carry intent in naming, types, and structure.
-- Write a comment only for non-obvious intent, a complex algorithm, or a constraint the code cannot express; delete commented-out code and track follow-up work in the issue tracker.
+- Write no comments; put surprising behavior into names, types, and structure instead. Delete commented-out code and track follow-up work in the issue tracker. The keep exceptions:
+  - legal or license headers;
+  - non-obvious behavior forced by an external dependency, platform, vendor, or protocol we cannot change;
+  - formatter directives such as `// prettier-ignore`, and lint suppressions whose rule is faulty, pedantic, or style-only;
+  - doc comments that define a public API contract;
+  - issue or RFC links that explain a constraint the code cannot express.
 - Preserve existing comments unless the task requires editing them.
 
 ### 7) Parse, Don't Validate
