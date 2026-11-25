@@ -1,0 +1,14 @@
+{
+  "id": "obsidian-features",
+  "tool": "claude",
+  "repo": "/Users/jose/Projects/personal-wiki",
+  "worktree": "/Users/jose/Projects/personal-wiki.worktrees/obsidian-features",
+  "branch": "obsidian-features",
+  "base": "main",
+  "status": "done",
+  "scope": [
+    ".agents/skills/agents-obsidian-workflow/SKILL.md,.agents/skills/agents-obsidian-workflow/references/FORMATS.md,.agents/skills/agents-obsidian-workflow/references/WORKFLOWS.md,.agents/skills/agents-obsidian-workflow/assets/Templates/Meeting.md,.agents/skills/agents-obsidian-workflow/assets/Templates/Project.md,.agents/skills/agents-obsidian-workflow/assets/Review.base,.gitignore"
+  ],
+  "created": "2026-11-25T21:35:22.292Z",
+  "updated": "2026-11-25T21:40:50.402Z"
+}
