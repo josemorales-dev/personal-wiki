@@ -1,0 +1,16 @@
+{
+  "id": "kb-subpages",
+  "tool": "claude",
+  "repo": "/Users/jose/Projects/personal-wiki",
+  "worktree": "/Users/jose/Projects/personal-wiki.worktrees/kb-subpages",
+  "branch": "kb-subpages",
+  "base": "main",
+  "status": "done",
+  "scope": [
+    ".agents/skills/agents-obsidian-workflow/SKILL.md",
+    ".agents/skills/agents-obsidian-workflow/references/FORMATS.md",
+    ".agents/skills/agents-obsidian-workflow/references/WORKFLOWS.md"
+  ],
+  "created": "2026-11-25T21:23:40.000Z",
+  "updated": "2026-11-25T21:35:19.711Z"
+}
