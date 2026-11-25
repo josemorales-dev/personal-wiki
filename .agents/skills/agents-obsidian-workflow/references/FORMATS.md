@@ -8,6 +8,33 @@ There are no properties, tags, priority codes, or status systems beyond what thi
 
 Templates exist only for meetings and projects. Their sources are in this skill's `assets/Templates/`. A template is a starting point: drop the sections a note doesn't need.
 
+## Citations
+
+The rule is **Cite every claim** in `SKILL.md`; these are its shapes, in every note.
+
+A fact from another note links it inline: `Approved: teach-in moves to 2026-12-06 — [[2026-11-18 OC General Meeting]]`.
+
+A fact from outside the vault carries a footnote. Its definition names the author, title, and date, says how far to trust the source (official, press, or written by a caucus), and ends in the URL. Footnotes resolve only within their own note, so each note carries the definitions it cites, copied word for word.
+
+```md
+- The CLC has 108 seats from 2026.[^announce]
+
+[^announce]: NYC-DSA, "2026 NYC-DSA Chapter Elections," 2026-11-23. Official. https://socialists.nyc/...
+[^obe]: Pedro LR (NBK), "One Big Election" resolution, 2026. Text pasted by Jose on 2026-11-23. Official proposal text. URL needed.
+```
+
+A note drawn from one source, such as a reading note, names it once in an opening `Source:` line.
+
+What no source confirms sits in a callout, apart from the cited facts: `[!question]` for an open or unpublished point, `[!note]` for an inference.
+
+```md
+> [!question] Not published, as of 2026-11-23
+> - the quota and voting software
+
+> [!note] My own inference, not taken from any source
+> - An independent has no organized base of first-choice votes.
+```
+
 ## `Inbox.md`
 
 One line per capture, newest at the bottom. No categorizing, tagging, or formatting is required.
@@ -67,7 +94,7 @@ Start it from `Templates/Meeting.md`. Prepare the agenda before the meeting, tak
 
 - In `Notes`, mark proposals as proposals. `Decisions` holds only what was approved.
 - Action items name an owner and a deadline when known. They are the historical record; Jose's items also go to the section's `Tasks.md`.
-- Link the projects and `Knowledge Base` headings the meeting touched.
+- Link the projects and knowledge base pages or headings the meeting touched.
 
 ## Project note: `DSA/Projects/Rent Strike Teach-in.md`
 
@@ -104,12 +131,12 @@ Active — venue confirmed, outreach under way.
 
 One `##` heading per topic (`Roles`, `Procedures`, `Links`; for DSA Tech, `Repositories`, `Access`, `Hosting`), added as the need appears.
 
-Every outside fact carries a footnote whose definition ends in the URL. The definition names the author, title, and date. It also says how far to trust the source: official, press, or written by a caucus.
+A topic that outgrows its heading becomes a page in the section's `Knowledge Base/` folder, named so it stands apart in Quick Switcher (`Election Rules`, beside the `Chapter Elections 2026-27` project). `Knowledge Base.md` stays as the hub: one line per page, then the topics still short enough to be headings.
 
 ```md
-- The CLC has 108 seats from 2026.[^announce]
+- [[Election Rules]]: who votes and runs, ballots, timing, and what is unpublished.
 
-[^announce]: NYC-DSA, "2026 NYC-DSA Chapter Elections," 2026-11-23. Official. https://socialists.nyc/...
+## Links
 ```
 
 ## Personal note: `Personal/Notes/The Power Broker.md`

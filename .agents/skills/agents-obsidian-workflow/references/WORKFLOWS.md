@@ -86,6 +86,7 @@ Done:
 
 Look for friction, and report it as a list of findings, each with a proposed fix and its maintenance cost:
 
+- facts with neither a citation nor a callout;
 - duplicated information;
 - checkboxes outside the three task lists;
 - near-duplicate notes;
