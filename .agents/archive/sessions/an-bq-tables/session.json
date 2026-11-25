@@ -1,0 +1,14 @@
+{
+  "id": "an-bq-tables",
+  "tool": "claude",
+  "repo": "/Users/jose/Projects/st-migration-scripts",
+  "worktree": "/Users/jose/Projects/st-migration-scripts.worktrees/an-bq-tables",
+  "branch": "an-bq-tables",
+  "base": "main",
+  "status": "done",
+  "scope": [
+    "f/st_migration/sync/sync_actionnetwork_to_lake.ts,f/st_migration/sync/sync_actionnetwork_to_lake.script.yaml,f/st_migration/sync/sync_actionnetwork_to_lake.flow/flow.yaml,f/st_migration/reconcile_all.flow/flow.yaml,tests/an-sync-tables.test.ts"
+  ],
+  "created": "2026-11-24T20:41:58.911Z",
+  "updated": "2026-11-25T16:36:39.565Z"
+}

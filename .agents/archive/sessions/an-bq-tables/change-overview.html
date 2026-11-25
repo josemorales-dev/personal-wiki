@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BigQuery Tables Switch</title>
+<style>
+  :root {
+    --bg: #f7f6f3; --card: #ffffff; --ink: #1d1d1f; --muted: #5f6368; --line: #d9d6cf;
+    --view: #8a6d1f; --view-bg: #fbf3dc; --tbl: #1f6f4a; --tbl-bg: #e3f4ea;
+    --store: #2c4f8a; --store-bg: #e4ecf8; --warn: #a3401c; --warn-bg: #fbe8df;
+    --done: #1f6f4a; --todo: #8b8b8b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #17181a; --card: #212226; --ink: #ececec; --muted: #a2a5ab; --line: #3a3c41;
+      --view: #e2c26a; --view-bg: #3a321b; --tbl: #7fd3a6; --tbl-bg: #1c3428;
+      --store: #9dbcf0; --store-bg: #1d2a40; --warn: #f0a07f; --warn-bg: #3d241a;
+      --done: #7fd3a6; --todo: #7a7a7a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #17181a; --card: #212226; --ink: #ececec; --muted: #a2a5ab; --line: #3a3c41;
+    --view: #e2c26a; --view-bg: #3a321b; --tbl: #7fd3a6; --tbl-bg: #1c3428;
+    --store: #9dbcf0; --store-bg: #1d2a40; --warn: #f0a07f; --warn-bg: #3d241a;
+    --done: #7fd3a6; --todo: #7a7a7a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  main { max-width: 920px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 1.7rem; margin: 0 0 4px; }
+  h2 { font-size: 1.2rem; margin: 40px 0 12px; }
+  .sub { color: var(--muted); margin: 0 0 24px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; }
+  code { font: 0.9em ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--bg); padding: 1px 5px; border-radius: 4px; }
+  svg { width: 100%; height: auto; display: block; }
+  svg text { fill: var(--ink); font: 14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  svg .small { font-size: 12px; fill: var(--muted); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+  .label { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  ul { padding-left: 20px; margin: 0; }
+  li { margin: 4px 0; }
+  .steps { list-style: none; padding: 0; margin: 0; }
+  .steps li { display: grid; grid-template-columns: 36px 1fr; gap: 12px; padding: 14px 0; border-top: 1px solid var(--line); }
+  .steps li:first-child { border-top: 0; }
+  .dot { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 0.9rem; border: 2px solid var(--todo); color: var(--todo); }
+  .dot.done { border-color: var(--done); background: var(--done); color: var(--card); }
+  .dot.now { border-color: var(--store); color: var(--store); }
+  .who { color: var(--muted); font-size: 0.9rem; }
+  .warn { background: var(--warn-bg); border-color: var(--warn); }
+  .warn h3 { color: var(--warn); margin: 0 0 8px; font-size: 1rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+  th, td { text-align: left; padding: 8px 6px; border-top: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; border-top: 0; }
+  .scroll { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Read the BigQuery tables, not the views</h1>
+  <p class="sub">Issue #187 in st-migration-scripts. This change is step 1 of 4: it adds a switch. With the switch off, nothing changes.</p>
+
+  <h2>Where this sits in the migration</h2>
+  <div class="card">
+    <svg viewBox="0 0 860 150" role="img" aria-label="Sync copies BigQuery into the store, then reconcilers send changes to Solidarity Tech">
+      <defs>
+        <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker>
+      </defs>
+      <rect x="10" y="35" width="190" height="80" rx="10" fill="var(--view-bg)" stroke="var(--view)"/>
+      <text x="105" y="70" text-anchor="middle" font-weight="600">BigQuery</text>
+      <text x="105" y="92" text-anchor="middle" class="small">Action Network data</text>
+
+      <line x1="200" y1="75" x2="320" y2="75" stroke="var(--muted)" stroke-width="2" marker-end="url(#a)"/>
+      <text x="260" y="62" text-anchor="middle" font-weight="600">sync</text>
+      <text x="260" y="100" text-anchor="middle" class="small">this change</text>
+
+      <rect x="325" y="35" width="190" height="80" rx="10" fill="var(--store-bg)" stroke="var(--store)"/>
+      <text x="420" y="70" text-anchor="middle" font-weight="600">Store (Postgres)</text>
+      <text x="420" y="92" text-anchor="middle" class="small">the mirror: an.users, ...</text>
+
+      <line x1="515" y1="75" x2="635" y2="75" stroke="var(--muted)" stroke-width="2" marker-end="url(#a)"/>
+      <text x="575" y="62" text-anchor="middle" font-weight="600">reconcilers</text>
+      <text x="575" y="100" text-anchor="middle" class="small">no change</text>
+
+      <rect x="640" y="35" width="210" height="80" rx="10" fill="var(--card)" stroke="var(--line)"/>
+      <text x="745" y="70" text-anchor="middle" font-weight="600">Solidarity Tech</text>
+      <text x="745" y="92" text-anchor="middle" class="small">API</text>
+    </svg>
+  </div>
+
+  <h2>What the switch does</h2>
+  <p>BigQuery has two copies of each table: a view (<code>users</code>) and a table behind it (<code>users_tbl</code>). The table is faster to read. Either way, the data lands in the store under the same name, so the reconcilers see no difference.</p>
+  <div class="grid">
+    <div class="card">
+      <div class="label">Switch off (default, today)</div>
+      <svg viewBox="0 0 400 210" role="img" aria-label="Switch off: sync reads the view users into store an.users">
+        <defs><marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--view)"/></marker></defs>
+        <rect x="10" y="20" width="150" height="56" rx="8" fill="var(--view-bg)" stroke="var(--view)" stroke-width="2"/>
+        <text x="85" y="44" text-anchor="middle" font-weight="600">users</text>
+        <text x="85" y="63" text-anchor="middle" class="small">view: read</text>
+        <rect x="10" y="120" width="150" height="56" rx="8" fill="none" stroke="var(--line)" stroke-dasharray="5 4"/>
+        <text x="85" y="144" text-anchor="middle" class="small">users_tbl</text>
+        <text x="85" y="163" text-anchor="middle" class="small">table: not read</text>
+        <path d="M160,48 C220,48 210,98 245,98" fill="none" stroke="var(--view)" stroke-width="2.5" marker-end="url(#b)"/>
+        <rect x="250" y="70" width="140" height="56" rx="8" fill="var(--store-bg)" stroke="var(--store)" stroke-width="2"/>
+        <text x="320" y="94" text-anchor="middle" font-weight="600">an.users</text>
+        <text x="320" y="113" text-anchor="middle" class="small">in the store</text>
+      </svg>
+    </div>
+    <div class="card">
+      <div class="label">Switch on (readAnTables = true)</div>
+      <svg viewBox="0 0 400 210" role="img" aria-label="Switch on: sync reads the table users_tbl into store an.users">
+        <defs><marker id="c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--tbl)"/></marker></defs>
+        <rect x="10" y="20" width="150" height="56" rx="8" fill="none" stroke="var(--line)" stroke-dasharray="5 4"/>
+        <text x="85" y="44" text-anchor="middle" class="small">users</text>
+        <text x="85" y="63" text-anchor="middle" class="small">view: not read</text>
+        <rect x="10" y="120" width="150" height="56" rx="8" fill="var(--tbl-bg)" stroke="var(--tbl)" stroke-width="2"/>
+        <text x="85" y="144" text-anchor="middle" font-weight="600">users_tbl</text>
+        <text x="85" y="163" text-anchor="middle" class="small">table: read, faster</text>
+        <path d="M160,148 C220,148 210,98 245,98" fill="none" stroke="var(--tbl)" stroke-width="2.5" marker-end="url(#c)"/>
+        <rect x="250" y="70" width="140" height="56" rx="8" fill="var(--store-bg)" stroke="var(--store)" stroke-width="2"/>
+        <text x="320" y="94" text-anchor="middle" font-weight="600">an.users</text>
+        <text x="320" y="113" text-anchor="middle" class="small">same name as before</text>
+      </svg>
+    </div>
+  </div>
+
+  <h2>The rollout</h2>
+  <div class="card">
+    <ol class="steps">
+      <li><div class="dot now">1</div><div><strong>Add the switch</strong> (this change, built and checked, not committed yet)<br>
+        <span class="who">Needs: commit, pull request, review, merge, deploy. The switch stays off, so prod is unchanged.</span></div></li>
+      <li><div class="dot">2</div><div><strong>Turn it on in develop</strong><br>
+        <span class="who">Needs: set <code>readAnTables: true</code> in the develop <code>reconcile_all</code> inputs in Windmill. Run the sync and compare row counts with a view-based run. No code change.</span></div></li>
+      <li><div class="dot">3</div><div><strong>Turn it on in prod</strong><br>
+        <span class="who">Needs: the same input change in the prod workspace, after develop runs clean. No code change.</span></div></li>
+      <li><div class="dot">4</div><div><strong>Remove the view path</strong><br>
+        <span class="who">Needs: a small cleanup pull request. It removes the switch, always reads <code>_tbl</code>, changes the table list to list the <code>_tbl</code> tables, and updates <code>docs/architecture.md</code>, which still says "views".</span></div></li>
+    </ol>
+  </div>
+
+  <h2>What changed in the code</h2>
+  <div class="card scroll">
+    <table>
+      <tr><th>File</th><th>Change</th></tr>
+      <tr><td><code>sync/sync_actionnetwork_to_lake.ts</code></td><td>New <code>readTables</code> parameter. A new function, <code>sourceTable</code>, picks <code>users</code> or <code>users_tbl</code>. Only the BigQuery reads use it. The store name, settings and anonymization stay keyed by <code>users</code>.</td></tr>
+      <tr><td><code>sync/...script.yaml</code>, <code>sync/...flow/flow.yaml</code></td><td>Add the <code>readTables</code> input so Windmill shows it and passes it to each table copy.</td></tr>
+      <tr><td><code>reconcile_all.flow/flow.yaml</code></td><td>New input <code>readAnTables</code>, passed to the Action Network sync. ActionKit always gets <code>false</code>.</td></tr>
+      <tr><td><code>tests/an-sync-tables.test.ts</code></td><td>Two tests: off reads <code>field_values</code>, on reads <code>field_values_tbl</code>.</td></tr>
+    </table>
+  </div>
+
+  <h2>Risks to watch in step 2</h2>
+  <div class="card warn">
+    <h3>Not yet tried against real BigQuery</h3>
+    <ul>
+      <li>The sync settings (partition keys, column lists) were written for the views. If a <code>_tbl</code> table has different columns or partitioning, the sync fails with the switch on. It fails loudly; it does not copy bad data.</li>
+      <li>The full test suite needs the shared test database. It could not run on this machine. CI runs it on the pull request.</li>
+    </ul>
+  </div>
+</main>
+</body>
+</html>
