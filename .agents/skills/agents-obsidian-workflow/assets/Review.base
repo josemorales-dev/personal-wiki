@@ -2,7 +2,7 @@ filters:
   not:
     - file.inFolder("Templates")
 formulas:
-  days_since_edit: (now() - file.mtime).days
+  days_since_edit: (now() - file.mtime).days.floor()
 properties:
   formula.days_since_edit:
     displayName: Days since edit
