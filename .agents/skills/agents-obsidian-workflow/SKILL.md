@@ -13,6 +13,7 @@ Jose runs this vault daily in plain Obsidian; you are an occasional helper. Ever
 
 ```text
 Inbox.md
+Review.base
 DSA/
   Tasks.md
   Knowledge Base.md
@@ -32,17 +33,15 @@ Templates/
   Project.md
 ```
 
-`DSA/` holds NYC DSA organizing, including the Lower Manhattan Organizing Committee (OC). `DSA Tech/` holds the software Jose builds or maintains for DSA, and shares `DSA/`'s shape. `Personal/` holds everything else. Every folder exists from setup, even while empty.
+`DSA/` holds NYC DSA organizing, including the Lower Manhattan Organizing Committee (OC). `DSA Tech/` holds the software Jose builds or maintains for DSA, and shares `DSA/`'s shape. `Personal/` holds everything else. Every folder exists from setup, even while empty. `Review.base` is the weekly review's view of projects and meetings. The one community plugin is Full Calendar, which shows Jose's calendar.
 
-This is the starting structure, and it grows only by **progressive organization**: structure is added once the notes already there need it. Anything beyond it, such as a folder, a template, a plugin, properties, or Bases, starts as a proposal to Jose that answers five questions:
+This structure, the four properties, and the two bases in [references/FORMATS.md](references/FORMATS.md) grow only by **progressive organization**: structure is added once the notes already there need it. Anything beyond them, such as a folder, a template, a plugin, a property, or a base, starts as a proposal to Jose that answers five questions:
 
 - Does it solve a real problem?
 - Does it save more work than it costs?
 - Could an existing feature do it?
 - Does the vault still work without AI?
 - Will Jose keep it up?
-
-The first such step, once projects grow hard to track, is a single `status` property (`active`, `paused`, `done`) with one filtered Bases view.
 
 ## Where things go
 
@@ -64,7 +63,7 @@ Filenames are what Jose would search for, since Quick Switcher is the main way a
 
 - The three `Tasks.md` files are the only live task lists, so "what do I need to do?" and "what am I waiting on?" each have one answer per section.
 - A meeting's `Action Items` are its historical record, and a project's `Next Steps` names its next meaningful step. Jose's own actions from either become tasks, linking back to their source.
-- Every link earns its place by leading somewhere Jose will want to go. Backlinks, Quick Switcher, Search, and Bookmarks replace hand-kept indexes and dashboards.
+- Every link earns its place by leading somewhere Jose will want to go. Backlinks, Quick Switcher, Search, Bookmarks, and Bases replace hand-kept indexes and dashboards.
 
 Formats, templates, and examples: [references/FORMATS.md](references/FORMATS.md). Read it before creating or restructuring a file.
 
@@ -79,7 +78,7 @@ Formats, templates, and examples: [references/FORMATS.md](references/FORMATS.md)
   - Anything unclear is a question for Jose.
 - **History stays.** Original wording, past decisions, dates, and links remain. Superseded text gets a dated line pointing at what replaced it.
 - **Backup first.** Before a migration or a change touching more than three notes, propose a dated copy of the vault (`~/Jose's Vault backups/YYYY-MM-DD/`), and make it once Jose agrees.
-- **Approval by name.** Delete, move, rename, or substantially rewrite a note only after Jose approves that change. A rename also rewrites every `[[Old name` link (covering `|`, `#`, and `![[` forms), since renaming on disk leaves links broken. Afterwards, a search for `[[Old name` must find nothing.
+- **Approval by name.** Delete, move, rename, or substantially rewrite a note only after Jose approves that change. Move and rename with `obsidian move path="<old path>" to="<new path>"`, so the app rewrites every link. Without the CLI, rewrite every `[[Old name` link yourself (covering `|`, `#`, and `![[` forms), since renaming on disk leaves links broken. Afterwards, a search for `[[Old name` must find nothing.
 - **Sections stay apart.** A request about one section reads and edits only that section, unless Jose names more. In Obsidian search, `path:DSA` also matches `DSA Tech`; scope to DSA alone with `path:"DSA/"`.
 - **Privacy.** Confidential membership information (who is a member, contact details, attendance, internal disputes), private conversations, and Jose's sensitive personal matters (health, money, family) need Jose's explicit go-ahead for that note.
   - When a broader search turns them up, name the note and leave the details out.
@@ -101,4 +100,4 @@ Formats, templates, and examples: [references/FORMATS.md](references/FORMATS.md)
 - audit the vault
 - set up or migrate the vault
 
-For syntax, use `obsidian-markdown`. Use `obsidian-cli` when `obsidian` is on `PATH`, and `obsidian-bases` only once Jose approves a Bases view. For current Obsidian behaviour, check the official docs at obsidian.md/help.
+For syntax, use `obsidian-markdown`. Use `obsidian-cli` when `obsidian` is on `PATH`, and `obsidian-bases` for `Review.base` and the knowledge base hub's embedded base. For current Obsidian behaviour, check the official docs at obsidian.md/help.

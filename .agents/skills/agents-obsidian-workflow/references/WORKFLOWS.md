@@ -43,11 +43,11 @@ Done: every decision and action item in the raw notes is in its section, and eac
 ## Run a project
 
 - **Start**: only for a multi-step effort. Propose a note from `Templates/Project.md` with a clear `Goal`, plus its first task in the section's `Tasks.md`.
-- **Update**: change `Status` or `Next Steps` when something meaningful changed, linking the meeting or note behind it.
-- **Close**: set `Status` to `Done`. List the project's open tasks, for Jose to check off or drop.
-- **Stalled**: an `Active` project that no open task links to, or a note unchanged for 30 days (`find "$HOME/Jose's Vault"/*/Projects -name '*.md' -mtime +30`). Report stalled projects, and Jose decides what to do.
+- **Update**: change `status`, the `Status` line, or `Next Steps` when something meaningful changed, linking the meeting or note behind it.
+- **Close**: set `status: done`. List the project's open tasks, for Jose to check off or drop.
+- **Stalled**: an `active` project in `Review.base`'s Stalled projects view, or one that no open task links to. Report stalled projects, and Jose decides what to do.
 
-Done (close): `Status` reads `Done`, and no open task links the project.
+Done (close): `status` is `done`, and no open task links the project.
 
 ## Find something
 
@@ -68,25 +68,29 @@ Done: the answer cites its notes, or says nothing matched and offers to capture 
 ## Weekly review (10–15 minutes)
 
 1. Process the inbox.
-2. Review the three task lists, and the searches `path:"DSA/" task-todo:/./`, `path:"DSA Tech/" task-todo:/./`, and `path:"Personal/" task-todo:/./`, which catch stray checkboxes:
+2. Review the three task lists, the bookmarked search `task-done:/./`, which lists checked boxes to clear, and the searches `path:"DSA/" task-todo:/./`, `path:"DSA Tech/" task-todo:/./`, and `path:"Personal/" task-todo:/./`, which catch stray checkboxes:
    - propose removing completed and obsolete tasks, moving any context worth keeping into its meeting or project note first;
    - move items between `Next` and `Later` as Jose decides;
    - list `Waiting On` items whose `since` date is more than two weeks old, to chase or drop.
 3. Check that every one of Jose's action items from meetings since the last review is in its section's `Tasks.md`.
-4. Review `Active` projects, and list the stalled ones.
+4. Open `Review.base`:
+   - Stalled projects: Jose chooses to continue, pause, or close each;
+   - Done projects: Jose keeps or deletes each note, after its context worth keeping is in a meeting or knowledge base note;
+   - Recent meetings: their action items feed step 3.
 
 Done:
 
 - the inbox has been processed;
 - no completed tasks remain;
 - every recent action item of Jose's is tracked;
-- stalled projects have been reported.
+- every stalled and done project has Jose's decision.
 
 ## Audit the vault
 
 Look for friction, and report it as a list of findings, each with a proposed fix and its maintenance cost:
 
 - facts with neither a citation nor a callout;
+- properties or tags beyond the four in FORMATS.md, and projects or meetings missing theirs;
 - duplicated information;
 - checkboxes outside the three task lists;
 - near-duplicate notes;
@@ -102,7 +106,7 @@ Done: every finding cites its notes, and nothing has changed until Jose approves
 2. Propose the smallest change, explaining the benefit and maintenance cost of anything that departs from the skill's structure:
    - a dated backup copy of the vault first;
    - create `Inbox.md`, the three `Tasks.md` files (with `## Next`, `## Waiting On`, and `## Later`), and both `Knowledge Base.md` files if missing;
-   - copy this skill's `assets/Templates/` into the vault if missing;
+   - copy this skill's `assets/Templates/` and `assets/Review.base` into the vault if missing;
    - create every other folder in the structure, even before its first note;
    - give every existing note a proposed destination.
 3. Apply only what Jose approves. Existing content moves as is, and links are updated by the rename rule.
@@ -110,7 +114,8 @@ Done: every finding cites its notes, and nothing has changed until Jose approves
    - Core plugins → Templates on, with Template folder location `Templates`, and a hotkey for "Templates: Insert template" (check the one chosen is free).
    - Files and links → Automatically update internal links: on.
    - Core plugins → File recovery: on.
-   - Bookmarks: `Inbox.md`, the three `Tasks.md` files, and the `DSA/Meetings/` folder. Bookmark a search only once Jose runs it often.
+   - Core plugins → Footnotes on, for a side panel of a note's citations.
+   - Bookmarks: `Inbox.md`, the three `Tasks.md` files, both `Knowledge Base.md` hubs, `Review.base`, the `DSA/Meetings/` folder, and the search `task-done:/./` named "Completed tasks". Bookmark another search only once Jose runs it often.
    - Backups: File Recovery covers recent local edits only. Obsidian Sync version history plus Time Machine, or another off-machine copy, is the real backup.
    - Privacy: folders and AI instructions are not security boundaries. Anything that must never reach an AI assistant belongs outside this vault.
    - The Daily notes core plugin can be turned off, since the system doesn't use it.

@@ -1,0 +1,58 @@
+filters:
+  not:
+    - file.inFolder("Templates")
+formulas:
+  days_since_edit: (now() - file.mtime).days
+properties:
+  formula.days_since_edit:
+    displayName: Days since edit
+views:
+  - type: table
+    name: Stalled projects
+    filters:
+      and:
+        - status == "active"
+        - file.mtime < now() - "30d"
+    sort:
+      - property: file.mtime
+        direction: ASC
+    order:
+      - file.name
+      - file.folder
+      - formula.days_since_edit
+  - type: table
+    name: Active projects
+    filters: status == "active"
+    sort:
+      - property: file.mtime
+        direction: ASC
+    order:
+      - file.name
+      - file.folder
+      - formula.days_since_edit
+  - type: table
+    name: Paused projects
+    filters: status == "paused"
+    order:
+      - file.name
+      - file.folder
+      - formula.days_since_edit
+  - type: table
+    name: Done projects
+    filters: status == "done"
+    sort:
+      - property: file.mtime
+        direction: ASC
+    order:
+      - file.name
+      - file.folder
+      - formula.days_since_edit
+  - type: table
+    name: Recent meetings
+    filters: date >= today() - "30d"
+    sort:
+      - property: date
+        direction: DESC
+    order:
+      - file.name
+      - file.folder

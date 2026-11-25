@@ -15,3 +15,6 @@
 # Live session state belongs to this machine; archived sessions are tracked.
 .agents/sessions/
 .agents/tools/sessions/node_modules/
+
+# The global PROJECT.md ignore also matches this template on a case-insensitive disk.
+!.agents/skills/agents-obsidian-workflow/assets/Templates/Project.md
