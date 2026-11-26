@@ -1,0 +1,21 @@
+{
+  "id": "slim-agent-context",
+  "tool": "claude",
+  "repo": "/Users/jose/Projects/personal-wiki",
+  "worktree": "/Users/jose/Projects/personal-wiki.worktrees/slim-agent-context",
+  "branch": "slim-agent-context",
+  "base": "main",
+  "status": "done",
+  "scope": [
+    "AGENTS.md",
+    ".agents/skills/README.md",
+    ".agents/skills/agents-coding-workflow/SKILL.md",
+    ".agents/skills/agents-coding-workflow/references/SESSIONS.md",
+    ".agents/skills/agents-language-standards/SKILL.md",
+    ".agents/skills/agents-language-standards/references/TYPESCRIPT_STANDARDS.md",
+    ".agents/skills/agents-language-standards/references/TYPESCRIPT_TOOLCHAIN.md",
+    ".agents/skills/agents-language-standards/references/TYPESCRIPT_SOURCES.md"
+  ],
+  "created": "2026-11-26T02:09:05.401Z",
+  "updated": "2026-11-26T02:12:07.119Z"
+}
