@@ -463,6 +463,14 @@ describe("update", () => {
     expect(c.stderr()).toContain("invalid scope path '../other'");
   });
 
+  test("rejects a comma-separated list of scope paths", () => {
+    const repo = projectRepository();
+    const c = cli();
+    start(c, repo, "add-login");
+    expect(c.sessions("update", "add-login", "--scope", "src/auth,README.md")).toBe(2);
+    expect(c.stderr()).toContain("pass --scope once per path");
+  });
+
   test("refuses to build a scope that another session is building in the same repository", () => {
     const repo = projectRepository();
     const c = cli();
@@ -680,6 +688,15 @@ describe("land", () => {
     expect(readFileSync(join(repo, "README.md"), "utf8")).toBe("app, drafted\n");
     expect(readFileSync(join(repo, "src", "login.ts"), "utf8")).toBe("login\n");
     expect(c.stdout()).toMatch(/copied\s+src\/login\.ts/);
+  });
+
+  test("lands a file whose name contains a comma", () => {
+    const repo = projectRepository();
+    const c = cli();
+    start(c, repo, "add-login");
+    writeFileSync(join(worktreeOf(repo, "add-login"), "notes, draft.md"), "notes\n");
+    expect(c.sessions("land", "add-login", "notes, draft.md")).toBe(0);
+    expect(readFileSync(join(repo, "notes, draft.md"), "utf8")).toBe("notes\n");
   });
 
   test("deletes in main a file the draft deleted", () => {

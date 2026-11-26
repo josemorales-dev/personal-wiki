@@ -386,6 +386,9 @@ function update(args: readonly string[], context: Context): void {
   if (status === "done") {
     throw new UsageError("status 'done' is set by 'sessions finish'");
   }
+  if (values.scope?.some((path) => path.includes(",")) === true) {
+    throw new UsageError("pass --scope once per path, not a comma-separated list");
+  }
   const scope = values.scope?.map((path) => expectUsage(parseScopePath(path)));
   const store = new SessionStore(context.hubRoot);
   const session = expectCommand(store.load(id), LIST_HINT);
