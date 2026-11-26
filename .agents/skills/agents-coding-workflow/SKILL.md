@@ -21,11 +21,26 @@ Every code change meets these on every route, a small change included:
 
 Every approval is one question the user answers yes or no. End the reply with it on its own line, in this form: `Approve <exactly what a yes covers>? (yes/no)`. Name the session id or the small change's edit. Settle any other decision in an earlier reply, so the approval question is the only question. Only an explicit yes is approval; any other answer, including comments on the draft, means revise and ask again. Before a session's approval question, list the draft review's known limitations, or say there are none.
 
+## Routes
+
+Every coding change goes through a session: a `PLAN.md` and a draft of the change in the session worktree, reviewed together in VS Code and approved before the change is built test-first in the main checkout. The rule holds on every route, including tickets built with `/implement` or `/implement-spec`.
+
+The one exception is a **small change**: the user named the exact edit, it touches one file, it removes no test, and it reverses no decision the user made earlier. A change that fails any part, or that you are unsure of, is a session.
+
+| Size                   | Route                                                                                                                      |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Small change           | Name the route in one line and ask a yes-or-no about this change alone; no session. Checks and review still run.           |
+| Fits one session       | One session.                                                                                                               |
+| Spans several sessions | `/grill-with-docs` → `/to-spec` → `/to-tickets`; each ticket is one session, built with `/implement` or `/implement-spec`. |
+| Too foggy to spec      | `/wayfinder` until the destination is a spec, then the row above.                                                          |
+
+Slash commands are user-typed: name the command and ask the user to run it.
+
 ## The loop
 
 Each step ends on its completion criterion. Move to the next step only once it holds.
 
-0. **Size.** Before the first edit, name the route in one line of the reply: `Route: small change. <the edit>` or `Route: session <id>. <why it isn't small>`. Measure the change against the small-change test in the hub `AGENTS.md` **Planning**. Done when the line is in the reply and, for a small change, the user has approved that change alone (see Approval). A small change skips steps 1–4 and builds in main; steps 5–10 still run.
+0. **Size.** Before the first edit, name the route in one line of the reply: `Route: small change. <the edit>` or `Route: session <id>. <why it isn't small>`, measured against Routes. For a session, new or resumed, read [references/SESSIONS.md](references/SESSIONS.md) and start or resume it. Done when the line is in the reply and the session is running, or, for a small change, the user has approved that change alone (see Approval). A small change skips steps 1–4 and builds in main; steps 5–10 still run.
 1. **Align.** For ambiguous, cross-module, or multi-step work, grill the user: load `grilling` and `domain-modeling`, or ask the user to type `/grill-with-docs` (or `/to-spec` when a spec is wanted). Done when the goal, the seams under test, and the checks are agreed and written in `PLAN.md`.
 2. **Research.** When the code the goal touches is unfamiliar, dispatch an `Explore` subagent with the goal and ask for the files, flows, and constraints involved as `path:line` pointers. When the goal depends on why existing code is the way it is, run `why` on it. Write the findings to `RESEARCH.md` in the session folder. Read in full only the files you will change. Done when every path in the plan's `Scope` traces to a finding.
 3. **Draft.** When the change adds or reshapes types, interfaces, or modules, run `architect` first. Write the whole proposed change, tests and code, in the session worktree, and leave it uncommitted. Run `no-comments` on the draft. Then review the draft. For a code change, run `code-review` in the worktree. Its fixed point is the worktree's `HEAD`, the main commit the session started from. Its spec is `PLAN.md`, and its standards are `agents-code-standards` plus `agents-language-standards` for each language in the diff. Start its subagents without asking. For a change to instructions or docs only, such as a skill, `AGENTS.md`, or a format reference, review the draft yourself against `writing-for-agents` and unslop. When the change touches shared code, name what else could break and the fact that makes it safe. Fix each finding in the draft, or record it under the plan's `Notes` as a known limitation. Done when every path in `Scope` is drafted, `no-comments` has reported, every review finding is fixed or recorded, and the plan's `Checks` pass in the worktree.
@@ -46,20 +61,9 @@ Every artifact the user reads follows the rules in [unslop](../unslop/SKILL.md):
 
 Carry out changes the user has authorized. An audit or review alone authorizes inspection and findings; an explicit request to fix or implement authorizes the scoped edits. Ask only for missing information, genuinely consequential approval, or a specific applicable project requirement.
 
-Sessions for every project live in the hub, so one list shows every agent's work on this machine. Manage them with the `sessions` command; `sessions help` lists its commands. When `sessions` is not found, run `bun run link` in the hub's `.agents/tools/sessions/` to put it on `PATH`. When `sessions review` opens no Changes editor, run `bun run link` in the hub's `.agents/tools/vscode-review/` and ask the user to reload the worktree's VS Code window.
-
-- Check: run `sessions list` before starting. When another session's scope overlaps the new work, tell the user before building.
-- Start: run `sessions start <id> --repo <project> --tool <claude|codex>` before writing `PLAN.md`. It creates the worktree `<project>.worktrees/<id>` on branch `<id>` and the session folder `.agents/sessions/<id>/` in the hub. Write `PLAN.md` and `RESEARCH.md` in the folder, the draft in the worktree, and the approved change and its commits in the main checkout. When the project has uncommitted changes, `start` copies them into the worktree, uncommitted, and the review shows them with the draft; name those files when you ask for approval. In main, stage only the session's own changes.
-- Track: record progress with `sessions update <id> --status <status>`. `start` sets `aligning`; set `awaiting-approval` at Approve, `building` at Build in main, `reviewing` at Review, `shipped` at Ship, and `blocked` when work stops on a blocker. `sessions finish` sets `done`. Record the approved plan's `Scope` paths with `--scope`, once per path.
-- Finish: once the approved change is committed in main, run `sessions finish <id> --discard-draft`. It removes the worktree and the draft branch and archives the folder. Commit the archived folder in the hub as `Archive the <id> session`.
-
-Read [references/PLAN-FORMAT.md](references/PLAN-FORMAT.md) before writing a session plan or handoff.
-
-Resuming a session: `sessions show <id>` gives its worktree and folder. Its `PLAN.md`, the draft in the worktree, and the Git history in main are the authoritative trail. Reconstruct state from them, continue from the handoff's `Next`, and re-run only the checks the remaining work touches.
-
 ## Project state
 
-Use existing project conventions for documentation, memory, issues, and ADRs. If adopting the `.agents/` convention, project context goes in `.agents/docs/PROJECT_CONTEXT.md` and supplemental memory in `.agents/MEMORY.md` and `.agents/memories/`. Read only relevant current memory. Before `sessions finish`, move durable facts from the session into project memory or docs. An absent file does not require copying global or unrelated project state.
+Use existing project conventions for documentation, memory, issues, and ADRs. If adopting the `.agents/` convention, project context goes in `.agents/docs/PROJECT_CONTEXT.md` and supplemental memory in `.agents/MEMORY.md` and `.agents/memories/`. Read only relevant current memory. An absent file does not require copying global or unrelated project state.
 
 For issue or PRD work, read [references/issue-tracker.md](references/issue-tracker.md).
 

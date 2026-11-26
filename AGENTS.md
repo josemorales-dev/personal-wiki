@@ -16,57 +16,13 @@ work in the style of Kent Beck.
   repository's own `AGENTS.md` / `CLAUDE.md` governs work inside it, and its
   domain knowledge (glossary, ADRs) lives in that repository.
 
-## Skills by kind of work
+## Before you start
 
-- Writing software (code changes, Git actions, issue or PRD work):
-  `agents-coding-workflow`. Its references are the source of truth for
-  workflow and project operations.
-- Code changes or reviews: `agents-code-standards`; add
-  `agents-language-standards` for TypeScript, JavaScript, declarations,
-  compiler configuration, and typed lint rules; add `agents-project-guides`
-  when the target project provides it.
-- Notes in the Obsidian vault, personal or NYC DSA (capture, tasks, meetings,
-  projects, weekly review): `agents-obsidian-workflow`.
-- Spreadsheets, Word, PDF, slides: the `xlsx`, `docx`, `pdf`, `pptx` skills.
-- Writing a skill or editing `AGENTS.md` / `CLAUDE.md`: `writing-for-agents`.
-
-Combine skills when their concerns overlap and follow their referenced documents
-rather than duplicating those rules here.
-
-## Planning
-
-Every coding change goes through a session run by `agents-coding-workflow`: a
-`PLAN.md` and a draft of the change in the session worktree, reviewed together
-in VS Code and approved before the change is built test-first in the main
-checkout. The one
-exception is a small change: the user named the exact edit, it touches one
-file, it removes no test, and it reverses no decision the user made earlier. A
-change that fails any part, or that you are unsure of, is a session. The rule
-holds on every route, including tickets built with `/implement` or
-`/implement-spec`.
-
-| Size                   | Route                                                                                                                      |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Small change           | Name the route in one line and ask a yes-or-no about this change alone; no session. Checks and review still run.           |
-| Fits one session       | One session.                                                                                                               |
-| Spans several sessions | `/grill-with-docs` → `/to-spec` → `/to-tickets`; each ticket is one session, built with `/implement` or `/implement-spec`. |
-| Too foggy to spec      | `/wayfinder` until the destination is a spec, then the row above.                                                          |
-
-Slash commands are user-typed: name the command and ask the user to run it.
-
-Sessions for every project live in this hub, each with a Git worktree beside its
-project repository. `agents-coding-workflow` manages them with the `sessions`
-tool.
-
-## Skill locations
-
-Skills live only in this repository: canonical copies in `.agents/skills/`,
-linked from `.claude/skills/` by relative symlinks. Nothing is installed
-globally, so start agents from this repository; for work in another repository,
-name its path (with Claude Code, also `--add-dir <path>`). Add a skill by placing
-it in `.agents/skills/<name>/` and linking `.claude/skills/<name>` to
-`../../.agents/skills/<name>`. Bundled skill references resolve from the loaded
-skill directory; see [.agents/skills/PATHS.md](.agents/skills/PATHS.md).
+- Code changes, Git actions, and issue or PRD work: load
+  `agents-coding-workflow` before the first edit. It sizes every change,
+  small ones included, and names the standards to read.
+- Adding, moving, or linking a skill: read
+  [.agents/skills/README.md](.agents/skills/README.md).
 
 ## Agent skills
 

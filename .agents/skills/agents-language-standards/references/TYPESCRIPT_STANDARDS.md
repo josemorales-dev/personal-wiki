@@ -1,6 +1,6 @@
 # TypeScript Standards
 
-Mandatory decision rules for TypeScript code, public types, compiler configuration, typed linting, and type tests. Apply toolchain sections only when the task changes that toolchain or creates a new configuration; do not turn an unrelated edit into a migration.
+Mandatory decision rules for TypeScript code, public types, and type tests. Compiler configuration and typed linting rules are in `TYPESCRIPT_TOOLCHAIN.md`; the sources behind both files are in `TYPESCRIPT_SOURCES.md`.
 
 For worked Do/Don't code, read `references/TYPESCRIPT_PATTERNS.md` when a type-design, boundary, narrowing, or brand rule's code shape is unclear, or when removing an `as` or `!` from existing code.
 
@@ -65,24 +65,6 @@ For worked Do/Don't code, read `references/TYPESCRIPT_PATTERNS.md` when a type-d
 - Keep exported surfaces smaller than implementations. Prefer canonical named exports unless an existing package, framework, or interoperability contract requires a default export.
 - Preserve stable public type names and inference behavior. A change that still runs correctly can still be a breaking declaration change.
 
-## Compiler configuration
-
-- Keep `strict: true`. Never weaken strictness or suppress diagnostics to make a local change pass.
-- Set `target` to the oldest runtime actually supported, not an older default. Set `lib` to APIs that are truly available through the runtime or explicit polyfills.
-- Select module settings from the official environment guide. Apps should model their known runtime or bundler; libraries should check with strict settings against their lowest supported runtime and emit declarations from a dedicated build configuration.
-- For new strict configurations, enable `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitReturns`, `noFallthroughCasesInSwitch`, `noImplicitOverride`, and `noUncheckedSideEffectImports` unless a documented environment or migration constraint prevents one.
-- Scope `include`, `exclude`, and project references deliberately. Remember that `exclude` does not prevent an imported file from entering the program.
-- Keep type checking separate from transpilation when the runtime or bundler strips types. A successful emit or execution is not proof that `tsc` passed.
-- Treat compiler-option migrations as planned compatibility changes. Measure the errors, fix root causes in small slices, and do not hide them with broad exclusions.
-
-## Typed linting
-
-- Use typescript-eslint type-aware linting for TypeScript projects when lint configuration is in scope. Start with `recommendedTypeChecked`; evaluate `strictTypeChecked` for new or already-strict codebases.
-- Enable or preserve the `no-unsafe-*` protections for assignment, arguments, calls, member access, returns, and narrowing assertions. They prevent `any` from silently crossing trusted code.
-- Enable or preserve `no-non-null-assertion`, `no-unnecessary-type-assertion`, `no-unnecessary-type-parameters`, `no-floating-promises`, `switch-exhaustiveness-check`, and `no-unnecessary-condition`.
-- Prefer project-service typed lint configuration where supported. Account for its performance cost and ensure every linted TypeScript file belongs to the intended project.
-- Fix the code or boundary rather than disabling a rule globally. A narrow suppression requires a concrete reason and must not conceal unsafe input.
-
 ## Tests and review
 
 - Test runtime behavior at runtime. Static types do not replace boundary, error-path, or asynchronous behavior tests.
@@ -100,33 +82,3 @@ For worked Do/Don't code, read `references/TYPESCRIPT_PATTERNS.md` when a type-d
 - [ ] Every Promise and expected failure has an explicit owner.
 - [ ] Runtime, module, target, and declaration assumptions match the toolchain.
 - [ ] Public type behavior has compile-time coverage where runtime tests cannot observe it.
-
-## Sources
-
-### TypeScript
-
-- [Handbook](https://www.typescriptlang.org/docs/handbook/)
-- [TSConfig reference](https://www.typescriptlang.org/tsconfig/)
-- [TypeScript design goals](https://github.com/microsoft/TypeScript/wiki/TypeScript-Design-Goals)
-- [Choosing compiler options](https://www.typescriptlang.org/docs/handbook/modules/guides/choosing-compiler-options)
-- [Release notes](https://www.typescriptlang.org/docs/handbook/release-notes/overview)
-
-### typescript-eslint
-
-- [Typed linting setup](https://typescript-eslint.io/getting-started/typed-linting/)
-- [Shared configurations](https://typescript-eslint.io/users/configs/)
-- [Avoiding `any`](https://typescript-eslint.io/blog/avoiding-anys/)
-- Unsafe flow rules: [assignment](https://typescript-eslint.io/rules/no-unsafe-assignment/), [argument](https://typescript-eslint.io/rules/no-unsafe-argument/), [call](https://typescript-eslint.io/rules/no-unsafe-call/), [member access](https://typescript-eslint.io/rules/no-unsafe-member-access/), and [return](https://typescript-eslint.io/rules/no-unsafe-return/)
-- Assertion rules: [non-null](https://typescript-eslint.io/rules/no-non-null-assertion/), [unsafe type assertion](https://typescript-eslint.io/rules/no-unsafe-type-assertion/), and [unnecessary type assertion](https://typescript-eslint.io/rules/no-unnecessary-type-assertion/)
-- Correctness rules: [unnecessary type parameters](https://typescript-eslint.io/rules/no-unnecessary-type-parameters/), [floating promises](https://typescript-eslint.io/rules/no-floating-promises/), [switch exhaustiveness](https://typescript-eslint.io/rules/switch-exhaustiveness-check/), and [unnecessary conditions](https://typescript-eslint.io/rules/no-unnecessary-condition/)
-
-### Applied TypeScript guidance
-
-- Effective TypeScript: [site](https://effectivetypescript.com/), [all posts](https://effectivetypescript.com/all-posts/), [unsoundness](https://effectivetypescript.com/2021/05/06/unsoundness/), [generics](https://effectivetypescript.com/2020/08/12/generics-golden-rule/), and [runtime types](https://effectivetypescript.com/2024/10/31/runtime-types/)
-- Total TypeScript: [articles](https://www.totaltypescript.com/articles) and [unions, literals, and narrowing](https://www.totaltypescript.com/books/total-typescript-essentials/unions-literals-and-narrowing)
-- Learning TypeScript: [articles](https://www.learningtypescript.com/articles), [branded types](https://www.learningtypescript.com/articles/branded-types), [comment directives](https://www.learningtypescript.com/articles/comment-directives), [why there is no `throws`](https://www.learningtypescript.com/articles/why-typescript-doesnt-include-a-throws-keyword), and [choosing `target`](https://www.learningtypescript.com/articles/why-increase-your-tsconfig-target)
-- [Google TypeScript style guide](https://google.github.io/styleguide/tsguide.html)
-- [Parse, don't validate](https://lexi-lambda.github.io/blog/2019/11/05/parse-don-t-validate/) and [Alexis King's writing](https://lexi-lambda.github.io/)
-- [Zod basics](https://zod.dev/basics)
-- [tsd](https://github.com/tsdjs/tsd)
-- [Cursor `typescript-best-practices` skill](https://github.com/cursor/plugins/blob/main/pstack/skills/typescript-best-practices/SKILL.md)

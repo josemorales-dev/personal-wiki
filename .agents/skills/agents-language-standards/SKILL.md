@@ -7,9 +7,10 @@ description: Routes programming-language work to the project's mandatory languag
 
 Identify every programming language touched by the task. Read each matching reference completely before writing or reviewing that language's code or configuration. Reading code to explore it does not need the reference.
 
-| Read this file                       | When the task involves                                                                                                                                          |
-| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `references/TYPESCRIPT_STANDARDS.md` | `.ts`, `.tsx`, `.mts`, `.cts`, `.d.ts`, TypeScript-checked JavaScript, `tsconfig`, TypeScript ESLint rules, package type declarations, or TypeScript type tests |
+| Read this file                       | When the task involves                                                                                                       |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| `references/TYPESCRIPT_STANDARDS.md` | `.ts`, `.tsx`, `.mts`, `.cts`, `.d.ts`, TypeScript-checked JavaScript, package type declarations, or TypeScript type tests    |
+| `references/TYPESCRIPT_TOOLCHAIN.md` | Changing or creating `tsconfig`, TypeScript compiler options, or TypeScript ESLint rules and configuration                    |
 
 For example, editing an endpoint or Zod schema requires the TypeScript reference here and project architecture from a relevant project-local guide; changing `tsconfig.json` also requires `agents-coding-workflow` when files will change.
 
