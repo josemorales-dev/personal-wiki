@@ -50,7 +50,7 @@ Consult the relevant file when work touches these domains:
   - legal or license headers;
   - non-obvious behavior forced by an external dependency, platform, vendor, or protocol we cannot change;
   - formatter directives such as `// prettier-ignore`, and lint suppressions whose rule is faulty, pedantic, or style-only;
-  - doc comments that define a public API contract;
+  - doc comments on exported functions, classes, methods, and types;
   - issue or RFC links that explain a constraint the code cannot express.
 - Preserve existing comments unless the task requires editing them.
 
