@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { run } from "./cli.ts";
-import { openInChrome, startDifit, stopDifit } from "./difit.ts";
+import { openReview } from "./editor.ts";
 import { runInstall } from "./install.ts";
 import { mainCheckout } from "./worktree.ts";
 
@@ -16,9 +16,7 @@ process.exitCode = run(process.argv.slice(2), {
   hubRoot: hub.value,
   color,
   now: () => new Date(),
-  startDifit,
-  stopDifit,
-  openInChrome,
+  openReview,
   runInstall,
   stdout: (text) => {
     process.stdout.write(text);

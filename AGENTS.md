@@ -36,8 +36,9 @@ rather than duplicating those rules here.
 ## Planning
 
 Every coding change goes through a session run by `agents-coding-workflow`: a
-`PLAN.md` and a draft of the change in the session worktree, approved together
-in difit before the change is built test-first in the main checkout. The one
+`PLAN.md` and a draft of the change in the session worktree, reviewed together
+in VS Code and approved before the change is built test-first in the main
+checkout. The one
 exception is a small change: the user named the exact edit, it touches one
 file, it removes no test, and it reverses no decision the user made earlier. A
 change that fails any part, or that you are unsure of, is a session. The rule

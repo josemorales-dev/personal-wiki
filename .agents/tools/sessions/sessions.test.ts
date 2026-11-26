@@ -3,9 +3,8 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync,
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { run, type Context } from "./cli.ts";
-import type { DifitServer } from "./difit.ts";
 import type { Install } from "./install.ts";
-import type { Outcome, Parsed } from "./session.ts";
+import type { Outcome } from "./session.ts";
 
 const START = new Date("2026-11-24T12:00:00.000Z");
 const temporaryDirectories: string[] = [];
@@ -72,41 +71,25 @@ type Cli = {
   stderr(): string;
   json(): unknown;
   advanceMinutes(minutes: number): void;
-  /** Each call the CLI made to start difit, in order. */
-  difitCalls(): readonly DifitCall[];
-  /** Makes the next difit start fail with `error`. */
-  failDifit(error: string): void;
-  /** Each URL the CLI opened in Chrome, in order. */
-  openedUrls(): readonly string[];
-  /** Makes the next attempt to open Chrome fail with `error`. */
-  failChrome(error: string): void;
-  /** Each difit pid the CLI stopped, in order. */
-  stoppedPids(): readonly number[];
-  /** Makes every attempt to stop difit fail with `error`. */
-  failStops(error: string): void;
-  /** Sets the server the next difit start returns. */
-  nextDifit(server: DifitServer): void;
+  /** Each review the CLI opened in VS Code, in order. */
+  editorCalls(): readonly ReviewCall[];
+  /** Makes every attempt to open VS Code fail with `error`. */
+  failEditor(error: string): void;
   /** Each install the CLI ran, in order. */
   installs(): readonly Install[];
   /** Makes every install fail with `error`. */
   failInstalls(error: string): void;
 };
 
-type DifitCall = { readonly directory: string; readonly args: readonly string[] };
-
-const DIFIT_SERVER: DifitServer = { port: 4967, url: "http://localhost:4967", pid: 4242 };
+type ReviewCall = { readonly worktree: string; readonly plan: string };
 
 function cli(color = false): Cli {
   const hub = temporaryDirectory();
   let now = START;
   let stdout = "";
   let stderr = "";
-  const difitCalls: DifitCall[] = [];
-  let difitResult: Parsed<DifitServer> = { ok: true, value: DIFIT_SERVER };
-  const openedUrls: string[] = [];
-  let chromeResult: Outcome = { ok: true };
-  const stoppedPids: number[] = [];
-  let stopResult: Outcome = { ok: true };
+  const editorCalls: ReviewCall[] = [];
+  let editorResult: Outcome = { ok: true };
   const installs: Install[] = [];
   let installResult: Outcome = { ok: true };
   const context: Context = {
@@ -119,17 +102,9 @@ function cli(color = false): Cli {
     stderr: (text) => {
       stderr += text;
     },
-    startDifit: (directory, args) => {
-      difitCalls.push({ directory, args });
-      return difitResult;
-    },
-    stopDifit: (pid) => {
-      stoppedPids.push(pid);
-      return stopResult;
-    },
-    openInChrome: (url) => {
-      openedUrls.push(url);
-      return chromeResult;
+    openReview: (worktree, plan) => {
+      editorCalls.push({ worktree, plan });
+      return editorResult;
     },
     runInstall: (directory, command) => {
       installs.push({ directory, command });
@@ -149,20 +124,9 @@ function cli(color = false): Cli {
     advanceMinutes(minutes) {
       now = new Date(now.getTime() + minutes * 60_000);
     },
-    difitCalls: () => difitCalls,
-    failDifit(error) {
-      difitResult = { ok: false, error };
-    },
-    openedUrls: () => openedUrls,
-    stoppedPids: () => stoppedPids,
-    failStops(error) {
-      stopResult = { ok: false, error };
-    },
-    nextDifit(server) {
-      difitResult = { ok: true, value: server };
-    },
-    failChrome(error) {
-      chromeResult = { ok: false, error };
+    editorCalls: () => editorCalls,
+    failEditor(error) {
+      editorResult = { ok: false, error };
     },
     installs: () => installs,
     failInstalls(error) {
@@ -179,7 +143,7 @@ describe("help", () => {
   test("lists every command when run without arguments", () => {
     const c = cli();
     expect(c.sessions()).toBe(0);
-    for (const command of ["start", "list", "show", "update", "difit", "land", "finish", "check-format"]) {
+    for (const command of ["start", "list", "show", "update", "review", "land", "finish", "check-format"]) {
       expect(c.stdout()).toContain(command);
     }
   });
@@ -292,13 +256,13 @@ describe("start", () => {
     expect(git(repo, "status", "--porcelain")).toContain("README.md");
   });
 
-  test("lists the carried files and says difit shows them", () => {
+  test("lists the carried files and says the review shows them", () => {
     const repo = projectRepository();
     writeFileSync(join(repo, "README.md"), "app, edited\n");
     const c = cli();
     start(c, repo, "add-login");
     expect(c.stdout()).toContain("README.md");
-    expect(c.stdout()).toContain("difit shows them with the draft");
+    expect(c.stdout()).toContain("'sessions review' shows them with the draft");
   });
 
   test("carries nothing when --base names another commit", () => {
@@ -592,86 +556,63 @@ describe("list", () => {
   });
 });
 
-describe("difit", () => {
-  test("opens difit on the worktree against the session base, with untracked files", () => {
+describe("review", () => {
+  function plannedSession(c: Cli, repo: string, id: string): string {
+    start(c, repo, id);
+    const plan = join(c.hub, ".agents", "sessions", id, "PLAN.md");
+    writeFileSync(plan, "# Plan\n");
+    return plan;
+  }
+
+  test("opens the worktree and the session plan in VS Code", () => {
     const repo = projectRepository();
     const c = cli();
-    start(c, repo, "add-login");
-    expect(c.sessions("difit", "add-login")).toBe(0);
-    expect(c.difitCalls()).toEqual([
-      {
-        directory: worktreeOf(repo, "add-login"),
-        args: [".", "main", "--merge-base", "--include-untracked", "--background", "--no-open"],
-      },
-    ]);
+    const plan = plannedSession(c, repo, "add-login");
+    expect(c.sessions("review", "add-login")).toBe(0);
+    expect(c.editorCalls()).toEqual([{ worktree: worktreeOf(repo, "add-login"), plan }]);
   });
 
-  test("prints the URL and the port for reading comments", () => {
-    const c = cli();
-    start(c, projectRepository(), "add-login");
-    expect(c.sessions("difit", "add-login")).toBe(0);
-    expect(c.stdout()).toContain("http://localhost:4967/?session=add-login");
-    expect(c.stdout()).toContain("comment get --port 4967 --format json");
-  });
-
-  test("opens the review in Chrome", () => {
-    const c = cli();
-    start(c, projectRepository(), "add-login");
-    expect(c.sessions("difit", "add-login")).toBe(0);
-    expect(c.openedUrls()).toEqual(["http://localhost:4967/?session=add-login"]);
-  });
-
-  test("warns and still prints the URL when Chrome does not open", () => {
-    const c = cli();
-    start(c, projectRepository(), "add-login");
-    c.failChrome("Unable to find application named 'Google Chrome'");
-    expect(c.sessions("difit", "add-login")).toBe(0);
-    expect(c.stderr()).toContain("could not open Chrome: Unable to find application named 'Google Chrome'");
-    expect(c.stdout()).toContain("http://localhost:4967");
-  });
-
-  test("stops the session's previous server before starting a new one", () => {
-    const c = cli();
-    start(c, projectRepository(), "add-login");
-    expect(c.sessions("difit", "add-login")).toBe(0);
-    expect(c.stoppedPids()).toEqual([]);
-    c.nextDifit({ port: 4968, url: "http://localhost:4968", pid: 5353 });
-    expect(c.sessions("difit", "add-login")).toBe(0);
-    expect(c.stoppedPids()).toEqual([4242]);
-  });
-
-  test("leaves other sessions' servers running", () => {
+  test("prints the worktree, the plan, and where the changes show", () => {
     const repo = projectRepository();
     const c = cli();
-    start(c, repo, "add-login");
-    start(c, repo, "fix-auth");
-    expect(c.sessions("difit", "add-login")).toBe(0);
-    expect(c.sessions("difit", "fix-auth")).toBe(0);
-    expect(c.stoppedPids()).toEqual([]);
+    const plan = plannedSession(c, repo, "add-login");
+    expect(c.sessions("review", "add-login")).toBe(0);
+    expect(c.stdout()).toContain(worktreeOf(repo, "add-login"));
+    expect(c.stdout()).toContain(plan);
+    expect(c.stdout()).toContain("the Changes editor");
   });
 
-  test("fails with difit's error when the server does not start", () => {
+  test("fails without opening VS Code when the session has no plan", () => {
     const c = cli();
     start(c, projectRepository(), "add-login");
-    c.failDifit("difit failed to start: boom");
-    expect(c.sessions("difit", "add-login")).toBe(1);
-    expect(c.stderr()).toContain("difit failed to start: boom");
+    expect(c.sessions("review", "add-login")).toBe(1);
+    expect(c.stderr()).toContain("no PLAN.md");
+    expect(c.editorCalls()).toEqual([]);
   });
 
-  test("fails without starting difit when the worktree is missing", () => {
+  test("fails with the editor's error", () => {
+    const c = cli();
+    plannedSession(c, projectRepository(), "add-login");
+    c.failEditor("'code' failed: command not found");
+    expect(c.sessions("review", "add-login")).toBe(1);
+    expect(c.stderr()).toContain("could not open VS Code: 'code' failed: command not found");
+  });
+
+  test("fails without opening VS Code when the worktree is missing", () => {
     const repo = projectRepository();
     const c = cli();
-    start(c, repo, "add-login");
+    plannedSession(c, repo, "add-login");
     rmSync(worktreeOf(repo, "add-login"), { recursive: true, force: true });
-    expect(c.sessions("difit", "add-login")).toBe(1);
+    expect(c.sessions("review", "add-login")).toBe(1);
     expect(c.stderr()).toContain("is missing");
-    expect(c.difitCalls()).toEqual([]);
+    expect(c.editorCalls()).toEqual([]);
   });
 
   test("fails for a session that does not exist", () => {
     const c = cli();
-    expect(c.sessions("difit", "ghost")).toBe(1);
+    expect(c.sessions("review", "ghost")).toBe(1);
     expect(c.stderr()).toContain("no active session 'ghost'");
+    expect(c.editorCalls()).toEqual([]);
   });
 });
 
@@ -814,37 +755,6 @@ describe("finish", () => {
     expect(existsSync(worktree)).toBe(false);
     expect(git(repo, "branch", "--list", "add-login")).toBe("");
     expect(existsSync(join(c.hub, ".agents", "archive", "sessions", "add-login"))).toBe(true);
-  });
-
-  test("stops the session's difit server and reports it", () => {
-    const repo = projectRepository();
-    const c = cli();
-    start(c, repo, "add-login");
-    expect(c.sessions("difit", "add-login")).toBe(0);
-    expect(c.sessions("finish", "add-login", "--discard-draft")).toBe(0);
-    expect(c.stoppedPids()).toEqual([4242]);
-    expect(c.stdout()).toContain("stopped the server on port 4967");
-    expect(existsSync(join(c.hub, ".agents", "archive", "sessions", "add-login", "difit.json"))).toBe(false);
-  });
-
-  test("keeps the review running when finish is refused", () => {
-    const repo = projectRepository();
-    const c = cli();
-    start(c, repo, "add-login");
-    commitIn(worktreeOf(repo, "add-login"), "login.ts");
-    expect(c.sessions("difit", "add-login")).toBe(0);
-    expect(c.sessions("finish", "add-login")).toBe(1);
-    expect(c.stoppedPids()).toEqual([]);
-  });
-
-  test("warns when the server does not stop and still finishes", () => {
-    const repo = projectRepository();
-    const c = cli();
-    start(c, repo, "add-login");
-    expect(c.sessions("difit", "add-login")).toBe(0);
-    c.failStops("operation not permitted");
-    expect(c.sessions("finish", "add-login", "--discard-draft")).toBe(0);
-    expect(c.stderr()).toContain("could not stop difit on port 4967: operation not permitted");
   });
 
   test("keeps an archived id reserved", () => {
