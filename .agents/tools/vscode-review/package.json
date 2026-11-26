@@ -1,7 +1,7 @@
 {
   "name": "vscode-review",
   "displayName": "VS Code review",
-  "description": "Opens Source Control and the Changes editor in a session worktree, on start-up and when sessions review asks.",
+  "description": "Opens the Changes editor, with the sidebar closed, in a session worktree, on start-up and when sessions review asks.",
   "publisher": "local",
   "version": "0.0.1",
   "private": true,

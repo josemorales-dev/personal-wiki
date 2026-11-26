@@ -169,10 +169,10 @@ Example:
 const REVIEW_HELP = `Usage: sessions review <id>
 
 Open the session worktree and its PLAN.md in VS Code, then ask the
-vscode-review extension to show Source Control and the Changes editor: the diff
-of the worktree's unstaged and untracked changes against its HEAD, where the
-draft branched from the session base. Staged changes open in a second editor,
-and committed changes do not appear.
+vscode-review extension to close the sidebar and show the Changes editor: the
+diff of the worktree's unstaged and untracked changes against its HEAD, where
+the draft branched from the session base. Staged changes open in a second
+editor, and committed changes do not appear.
 
 The extension needs a one-time 'bun run link' in .agents/tools/vscode-review
 and a reload of any VS Code window that was open before.

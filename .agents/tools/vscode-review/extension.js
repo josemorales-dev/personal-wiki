@@ -4,8 +4,8 @@ const { isSessionWorktree } = require("./session-worktree.js");
 const REPOSITORY_WAIT_MS = 30_000;
 
 /**
- * In a session worktree, shows the Changes editor when the window opens and whenever `sessions review` sends
- * `vscode://local.vscode-review/show-changes`, which reaches a window that is already open.
+ * In a session worktree, closes the sidebar and shows the Changes editor when the window opens and whenever
+ * `sessions review` sends `vscode://local.vscode-review/show-changes`, which reaches a window that is already open.
  */
 function activate(context) {
   const folders = vscode.workspace.workspaceFolders ?? [];
@@ -24,11 +24,11 @@ async function showChanges(folder) {
     const repository = await openedRepository(git, folder);
     if (repository === undefined) return warn(`Git opened no repository for ${folder.fsPath}`);
     await repository.status();
-    await vscode.commands.executeCommand("workbench.view.scm");
     if (repository.state.indexChanges.length > 0) {
       await vscode.commands.executeCommand("git.viewStagedChanges", repository.rootUri);
     }
     await vscode.commands.executeCommand("git.viewChanges", repository.rootUri);
+    await vscode.commands.executeCommand("workbench.action.closeSidebar");
   } catch (error) {
     warn(error instanceof Error ? error.message : String(error));
   }
