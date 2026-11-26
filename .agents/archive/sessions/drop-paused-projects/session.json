@@ -1,0 +1,16 @@
+{
+  "id": "drop-paused-projects",
+  "tool": "claude",
+  "repo": "/Users/jose/Projects/personal-wiki",
+  "worktree": "/Users/jose/Projects/personal-wiki.worktrees/drop-paused-projects",
+  "branch": "drop-paused-projects",
+  "base": "main",
+  "status": "done",
+  "scope": [
+    ".agents/skills/agents-obsidian-workflow/assets/Review.base",
+    ".agents/skills/agents-obsidian-workflow/references/FORMATS.md",
+    ".agents/skills/agents-obsidian-workflow/references/WORKFLOWS.md"
+  ],
+  "created": "2026-11-26T01:58:30.240Z",
+  "updated": "2026-11-26T02:00:02.275Z"
+}
