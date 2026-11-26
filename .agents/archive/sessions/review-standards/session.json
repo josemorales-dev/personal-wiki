@@ -1,0 +1,14 @@
+{
+  "id": "review-standards",
+  "tool": "claude",
+  "repo": "/Users/jose/Projects/personal-wiki",
+  "worktree": "/Users/jose/Projects/personal-wiki.worktrees/review-standards",
+  "branch": "review-standards",
+  "base": "main",
+  "status": "done",
+  "scope": [
+    ".agents/skills/agents-coding-workflow/SKILL.md,.agents/skills/code-review/SKILL.md,.agents/skills/implement/SKILL.md,.agents/skills/implement-spec/SKILL.md"
+  ],
+  "created": "2026-11-26T00:23:12.320Z",
+  "updated": "2026-11-26T00:27:16.154Z"
+}
