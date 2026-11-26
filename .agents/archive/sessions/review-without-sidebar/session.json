@@ -1,0 +1,16 @@
+{
+  "id": "review-without-sidebar",
+  "tool": "claude",
+  "repo": "/Users/jose/Projects/personal-wiki",
+  "worktree": "/Users/jose/Projects/personal-wiki.worktrees/review-without-sidebar",
+  "branch": "review-without-sidebar",
+  "base": "main",
+  "status": "done",
+  "scope": [
+    ".agents/tools/vscode-review/extension.js",
+    ".agents/tools/vscode-review/package.json",
+    ".agents/tools/sessions/cli.ts"
+  ],
+  "created": "2026-11-26T02:03:12.542Z",
+  "updated": "2026-11-26T02:06:10.644Z"
+}
