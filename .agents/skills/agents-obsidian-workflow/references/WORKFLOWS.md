@@ -45,7 +45,7 @@ Done: every decision and action item in the raw notes is in its section, and eac
 - **Start**: only for a multi-step effort. Propose a note from `Templates/Project.md` with a clear `Goal`, plus its first task in the section's `Tasks.md`.
 - **Update**: change `status`, the `Status` line, or `Next Steps` when something meaningful changed, linking the meeting or note behind it.
 - **Close**: set `status: done`. List the project's open tasks, for Jose to check off or drop.
-- **Stalled**: an `active` project in `Review.base`'s Stalled projects view, or one that no open task links to. Report stalled projects, and Jose decides what to do.
+- **Stalled**: an `active` project unchanged for 30 days or more, at the top of `Review.base`'s Active projects view, or one that no open task links to. Report stalled projects, and Jose decides what to do.
 
 Done (close): `status` is `done`, and no open task links the project.
 
@@ -74,7 +74,7 @@ Done: the answer cites its notes, or says nothing matched and offers to capture 
    - list `Waiting On` items whose `since` date is more than two weeks old, to chase or drop.
 3. Check that every one of Jose's action items from meetings since the last review is in its section's `Tasks.md`.
 4. Open `Review.base`:
-   - Stalled projects: Jose chooses to continue or close each;
+   - Active projects: for each stalled one, Jose chooses to continue or close it;
    - Done projects: Jose keeps or deletes each note, after its context worth keeping is in a meeting or knowledge base note;
    - Recent meetings: their action items feed step 3.
 

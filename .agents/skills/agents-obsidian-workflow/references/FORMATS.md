@@ -182,12 +182,11 @@ description: Who votes and runs, ballots, timing, and what is unpublished.
 
 The weekly review's view of the vault, at the vault root. Its source is this skill's `assets/Review.base`. It skips `Templates/` and has these views:
 
-- **Stalled projects**: `active` and unchanged for 30 days.
-- **Active projects**: oldest change first, with the days since.
+- **Active projects**: oldest change first, with the days since. Those unchanged for 30 days or more are stalled.
 - **Done projects**: what the review clears from the active list, for Jose to keep or delete.
 - **Recent meetings**: the last 30 days, newest first.
 
-Read a view from the terminal with `obsidian base:query path=Review.base view="Stalled projects" format=md`.
+Read a view from the terminal with `obsidian base:query path=Review.base view="Active projects" format=md`.
 
 ## Personal note: `Personal/Notes/The Power Broker.md`
 

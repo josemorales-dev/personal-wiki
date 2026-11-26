@@ -8,19 +8,6 @@ properties:
     displayName: Days since edit
 views:
   - type: table
-    name: Stalled projects
-    filters:
-      and:
-        - status == "active"
-        - file.mtime < now() - "30d"
-    sort:
-      - property: file.mtime
-        direction: ASC
-    order:
-      - file.name
-      - file.folder
-      - formula.days_since_edit
-  - type: table
     name: Active projects
     filters: status == "active"
     sort:
