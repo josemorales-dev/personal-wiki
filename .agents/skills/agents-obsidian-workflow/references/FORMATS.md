@@ -12,7 +12,7 @@ Notes carry these four properties and no others, and no tags:
 
 | Property      | On                   | Value                                                  |
 | ------------- | -------------------- | ------------------------------------------------------ |
-| `status`      | projects             | `active`, `paused`, or `done`                          |
+| `status`      | projects             | `active` or `done`                                     |
 | `date`        | meetings             | the meeting's date                                     |
 | `aliases`     | any note             | other names Jose searches for, such as `OC`            |
 | `description` | knowledge base pages | one line on what the page covers, shown by the hub     |
@@ -184,7 +184,6 @@ The weekly review's view of the vault, at the vault root. Its source is this ski
 
 - **Stalled projects**: `active` and unchanged for 30 days.
 - **Active projects**: oldest change first, with the days since.
-- **Paused projects**.
 - **Done projects**: what the review clears from the active list, for Jose to keep or delete.
 - **Recent meetings**: the last 30 days, newest first.
 

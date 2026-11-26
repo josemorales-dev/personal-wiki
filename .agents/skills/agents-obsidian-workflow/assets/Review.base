@@ -31,13 +31,6 @@ views:
       - file.folder
       - formula.days_since_edit
   - type: table
-    name: Paused projects
-    filters: status == "paused"
-    order:
-      - file.name
-      - file.folder
-      - formula.days_since_edit
-  - type: table
     name: Done projects
     filters: status == "done"
     sort:

@@ -74,7 +74,7 @@ Done: the answer cites its notes, or says nothing matched and offers to capture 
    - list `Waiting On` items whose `since` date is more than two weeks old, to chase or drop.
 3. Check that every one of Jose's action items from meetings since the last review is in its section's `Tasks.md`.
 4. Open `Review.base`:
-   - Stalled projects: Jose chooses to continue, pause, or close each;
+   - Stalled projects: Jose chooses to continue or close each;
    - Done projects: Jose keeps or deletes each note, after its context worth keeping is in a meeting or knowledge base note;
    - Recent meetings: their action items feed step 3.
 
@@ -115,7 +115,7 @@ Done: every finding cites its notes, and nothing has changed until Jose approves
    - Files and links → Automatically update internal links: on.
    - Core plugins → File recovery: on.
    - Core plugins → Footnotes on, for a side panel of a note's citations.
-   - Bookmarks: `Inbox.md`, the three `Tasks.md` files, both `Knowledge Base.md` hubs, `Review.base`, the `DSA/Meetings/` folder, and the search `task-done:/./` named "Completed tasks". Bookmark another search only once Jose runs it often.
+   - Bookmarks: `Inbox.md`, the three `Tasks.md` files, both `Knowledge Base.md` hubs, `Review.base`, the `DSA/Meetings/` folder named "DSA meetings", and the search `task-done:/./` named "Completed tasks". Bookmark another search only once Jose runs it often.
    - Backups: File Recovery covers recent local edits only. Obsidian Sync version history plus Time Machine, or another off-machine copy, is the real backup.
    - Privacy: folders and AI instructions are not security boundaries. Anything that must never reach an AI assistant belongs outside this vault.
    - The Daily notes core plugin can be turned off, since the system doesn't use it.
