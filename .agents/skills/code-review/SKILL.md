@@ -18,7 +18,7 @@ The issue tracker should have been provided to you. If not, tell the user to run
 
 Whatever the user said is the fixed point (a commit SHA, branch name, tag, `main`, `HEAD~5`, etc.). If they didn't specify one, ask for it.
 
-Capture the diff command once: `git diff <fixed-point>...HEAD` (three-dot, so the comparison is against the merge-base). Also note the list of commits via `git log <fixed-point>..HEAD --oneline`.
+Capture the diff command once: `git diff <fixed-point>...HEAD` (three-dot, so the comparison is against the merge-base). When the change under review is uncommitted, use `git diff <fixed-point>` instead, which compares the working tree. Also note the list of commits via `git log <fixed-point>..HEAD --oneline`.
 
 Before going further, confirm the fixed point resolves (`git rev-parse <fixed-point>`) and the diff is non-empty. A bad ref or empty diff should fail here, not inside two parallel sub-agents.
 
@@ -35,7 +35,7 @@ Alongside the spec, give the Spec sub-agent the project's `GLOSSARY.md` and any 
 
 ### 3. Identify the standards sources
 
-Search the repo for every file that documents how code should be written. When `CODING_STANDARDS.md` or `CONTRIBUTING.md` exists, it must be on the list. Always add the `agents-code-standards` engineering standards, plus the `agents-language-standards` references for each language in the diff. Locate them through skill discovery. Where one of these conflicts with a standard the repo documents, the repo wins.
+Search the repo for every file that documents how code should be written. When `CODING_STANDARDS.md` or `CONTRIBUTING.md` exists, it must be on the list. Always add `agents-code-standards/references/ENGINEERING_STANDARDS.md`, plus each `agents-language-standards` reference that its routing table assigns to a language in the diff, such as `references/TYPESCRIPT_STANDARDS.md` for TypeScript. Find the two skill directories through skill discovery and pass the sub-agent absolute paths. Where one of these conflicts with a standard the repo documents, the repo wins.
 
 On top of whatever the repo documents, the Standards axis always carries the **smell baseline** below: a fixed set of Fowler code smells (_Refactoring_, ch.3) that applies even when a repo documents nothing. Two rules bind it:
 

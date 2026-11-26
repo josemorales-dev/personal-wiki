@@ -28,6 +28,7 @@ Communication to and from subagents should be sparse. Communicate primarily thro
 
 4. Use a fresh **implementer subagent** for each ticket, each in its own worktree on its own branch. Each implementer subagent:
    - confirms its worktree is based on the integration branch before starting, and resets onto it if not;
+   - calls the Skill tool with `agents-code-standards`, and with `agents-language-standards` when a language it routes is involved, before writing code;
    - calls the Skill tool with `tdd` to build the ticket;
    - merges the integration branch tip into its own branch before reporting done
 
