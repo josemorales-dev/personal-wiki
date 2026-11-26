@@ -1,0 +1,16 @@
+{
+  "id": "sessions-scope",
+  "tool": "claude",
+  "repo": "/Users/jose/Projects/personal-wiki",
+  "worktree": "/Users/jose/Projects/personal-wiki.worktrees/sessions-scope",
+  "branch": "sessions-scope",
+  "base": "main",
+  "status": "done",
+  "scope": [
+    ".agents/tools/sessions/cli.ts",
+    ".agents/tools/sessions/sessions.test.ts",
+    ".agents/skills/agents-coding-workflow/SKILL.md"
+  ],
+  "created": "2026-11-26T00:30:35.035Z",
+  "updated": "2026-11-26T00:37:11.975Z"
+}
