@@ -1,0 +1,15 @@
+{
+  "id": "review-before-approval",
+  "tool": "claude",
+  "repo": "/Users/jose/Projects/personal-wiki",
+  "worktree": "/Users/jose/Projects/personal-wiki.worktrees/review-before-approval",
+  "branch": "review-before-approval",
+  "base": "main",
+  "status": "done",
+  "scope": [
+    ".agents/skills/agents-coding-workflow/SKILL.md",
+    ".agents/skills/code-review/SKILL.md"
+  ],
+  "created": "2026-11-26T01:37:49.758Z",
+  "updated": "2026-11-26T01:42:51.320Z"
+}
