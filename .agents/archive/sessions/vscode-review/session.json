@@ -1,0 +1,16 @@
+{
+  "id": "vscode-review",
+  "tool": "claude",
+  "repo": "/Users/jose/Projects/personal-wiki",
+  "worktree": "/Users/jose/Projects/personal-wiki.worktrees/vscode-review",
+  "branch": "vscode-review",
+  "base": "main",
+  "status": "done",
+  "scope": [
+    ".agents/tools/sessions",
+    ".agents/skills/agents-coding-workflow/SKILL.md",
+    "AGENTS.md"
+  ],
+  "created": "2026-11-26T00:40:42.342Z",
+  "updated": "2026-11-26T01:37:05.383Z"
+}
